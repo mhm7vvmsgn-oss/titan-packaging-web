@@ -1,89 +1,555 @@
-<!doctype html><html lang="th"
+
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#143f30">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Titan Packaging | คำนวณราคากล่อง</title>
 <style>
-body {
-  font-family: system-ui, sans-serif;
-  background: #f3f7f4;
-  color: #18382b;
-  font-size: 15px;
-  margin: 0;
+:root{font-family:system-ui,-apple-system,sans-serif;color:#18382d;background:#f5f8f5}
+*{box-sizing:border-box}
+body{margin:0}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+[hidden]{display:none!important}
+header{background:white;border-bottom:1px solid #e5ebe6}
+.container{max-width:1100px;margin:auto;padding:0 16px}
+.top{height:70px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:900;font-size:21px;letter-spacing:-.5px}
+.logo{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#143f30;font-size:23px}
+.small{font-size:12px;color:#82958a;font-weight:500}
+button{border:0;border-radius:11px;padding:11px 14px;font-weight:800}
+.btn{background:#173e30;color:white}
+.light{background:#eaf1eb;color:#245741}
+.hero{background:linear-gradient(120deg,#123b2d,#176447);color:white;border-radius:23px;margin:17px 0 22px;padding:34px 29px;position:relative;overflow:hidden}
+.hero:after{content:"📦";position:absolute;right:24px;top:24px;font-size:110px;opacity:.22;transform:rotate(-13deg)}
+.hero .eyebrow{color:#d8f6a2;font-size:11px;font-weight:900;letter-spacing:2px}
+.hero h1{font-size:clamp(26px,4.5vw,41px);line-height:1.2;margin:12px 0;max-width:480px}
+.hero p{font-size:14px;color:#d4e6d8;line-height:1.8;max-width:470px}
+.stats{display:flex;gap:28px;margin-top:18px}
+.stats strong{display:block;font-size:24px}
+.stats small{font-size:11px;color:#d2e5d7}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:17px;align-items:start}
+.panel{background:white;border:1px solid #e5ece5;border-radius:19px;overflow:hidden;box-shadow:0 8px 24px #14352208}
+.section{padding:22px}
+.kicker{color:#759780;font-size:10px;font-weight:900;letter-spacing:1.7px}
+.head-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h2{margin:5px 0;font-size:22px}
+.count{background:#ecf4ed;border-radius:25px;padding:7px 11px;color:#467057;font-size:12px;white-space:nowrap}
+.filters{display:grid;grid-template-columns:minmax(0,1fr) 143px;gap:9px;margin-top:20px}
+.field{width:100%;height:46px;border-radius:12px;border:1px solid #dce8df;background:#f8faf8;color:#173a2b;padding:0 13px;outline:none;min-width:0}
+.field:focus{border-color:#59a06d;box-shadow:0 0 0 3px #76b97b22}
+.cards{padding:0 20px 20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.product{border:1px solid #e4ebe4;border-radius:16px;padding:16px;min-width:0}
+.product-top{display:flex;align-items:center;gap:11px}
+.symbol{background:#e8f4e9;border-radius:13px;width:49px;height:49px;display:grid;place-items:center;font-size:25px;flex-shrink:0}
+.product h3{font-size:18px;margin:0}
+.muted{font-size:12px;color:#819488}
+.size{font-size:12px;color:#819488;margin:12px 0}
+.bottom{display:flex;justify-content:space-between;align-items:end;gap:7px}
+.price{font-size:20px;font-weight:900;color:#14613f}
+.price small{font-size:11px;font-weight:400}
+.add{background:#143f30;color:white;font-size:12px;white-space:nowrap}
+.admin-links{display:flex;gap:8px;margin-top:12px}
+.admin-links button{font-size:11px;padding:7px;background:#eff5ef;color:#38674a}
+.aside{display:grid;gap:15px;position:sticky;top:15px}
+.cart-head{padding:22px;border-bottom:1px solid #edf1ed}
+.cart-items{padding:5px 21px;max-height:480px;overflow:auto}
+.empty{padding:40px 15px;text-align:center;color:#8c9d91;font-size:13px;line-height:1.8;grid-column:1/-1}
+.cart-item{padding:14px 0;border-bottom:1px solid #edf1ed}
+.cart-item b{font-size:14px}
+.cart-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px}
+.quantity{display:flex;align-items:center;background:#f4f8f5;border-radius:10px;border:1px solid #e4eee6}
+.quantity button{background:transparent;color:#20563c;padding:7px 10px}
+.quantity input{width:44px;border:0;background:transparent;text-align:center;font-size:13px;appearance:textfield}
+.quantity input::-webkit-inner-spin-button{-webkit-appearance:none}
+.remove{color:#a36a62;background:transparent;padding:5px}
+.cart-footer{padding:20px}
+.total{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#edf5ec;border-radius:13px;padding:16px}
+.total strong{font-size:24px;color:#145b3d}
+.action-row{display:flex;gap:8px;margin-top:12px}
+.action-row button{flex:1;font-size:12px}
+details{padding:20px}
+summary{cursor:pointer;font-weight:900}
+.form label{display:block;font-size:12px;margin:12px 0 5px;color:#536c5b}
+.form button{margin-top:12px}
+.notice{font-size:12px;color:#789283;line-height:1.7}
+.import{background:#e0f1d9;color:#225b33;width:100%;margin-top:13px}
+.alert{border-radius:12px;padding:12px;color:#ab3434;background:#fff0ec;margin:10px 0}
+.footer{text-align:center;color:#94a49a;font-size:12px;padding:27px}
+.mobile-total{display:none}
+#toast{position:fixed;left:50%;bottom:23px;transform:translateX(-50%);background:#0e3729;color:white;padding:12px 17px;border-radius:12px;z-index:20;text-align:center;max-width:90%}
+@media(max-width:850px){
+.layout{grid-template-columns:1fr}
+.aside{position:static}
+.cards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-* { box-sizing: border-box; }
-header {
-  background: linear-gradient(135deg,#103e2a,#176c45);
-  color: white;
-  padding: 22px 18px 28px;
-}
-header h1 {
-  font-size: 28px;
-  line-height: 1.25;
-  margin: 0 0 8px;
-}
-header p {
-  font-size: 15px;
-  margin: 0;
-}
-main {
-  max-width: 1000px;
-  margin: auto;
-  padding: 14px;
-}
-.panel {
-  background: white;
-  padding: 18px;
-  border-radius: 18px;
-  margin: 12px 0;
-  box-shadow: 0 4px 20px #123d6610;
-}
-h2 {
-  font-size: 20px;
-  margin: 0 0 16px;
-}
-input {
-  max-width: 100%;
-  padding: 12px;
-  border: 1px solid #cfdfd3;
-  border-radius: 11px;
-  font-size: 15px;
-}
-#search { width: 100%; }
-button {
-  background: #17623f;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 11px 14px;
-  border: 0;
-  border-radius: 11px;
-}
-button.secondary {
-  background: #e9f2eb;
-  color: #24533a;
-}
-.item {
-  padding: 15px 0;
-  border-bottom: 1px solid #e4ece6;
-  font-size: 15px;
-}
-.item strong { font-size: 16px; }
-.line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-#total {
-  font-size: 25px;
-  font-weight: 800;
-  color: #14633e;
-}
-#status {
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-@media (max-width: 600px) {
-  main { padding: 12px; }
-  .panel { padding: 16px; }
-  button { font-size: 14px; }
+@media(max-width:620px){
+.brand{font-size:18px}
+.top{height:65px}
+.hero{padding:26px 20px}
+.hero:after{font-size:70px;right:4px;top:15px}
+.hero h1{font-size:27px}
+.hero p{font-size:12px;max-width:85%}
+.section{padding:18px}
+.cards{grid-template-columns:1fr;padding:0 13px 14px}
+.filters{grid-template-columns:minmax(0,1fr) 115px}
+.product{padding:14px}
+.layout{padding-bottom:90px}
+.mobile-total{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:10;background:white;align-items:center;justify-content:space-between;padding:12px 16px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -5px 20px #183c2625}
+.mobile-total strong{font-size:20px;color:#145b3d}
+.mobile-total a{background:#143f30;color:white;text-decoration:none;border-radius:10px;padding:12px;font-weight:800;font-size:13px}
 }
 </style>
-><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#166534"><link rel="manifest" href="manifest.webmanifest"><title>Titan Packaging | คำนวณราคากล่อง</title><style>body{font-family:system-ui,sans-serif;background:#f1f5f3;color:#17352a;margin:0}header{background:#166534;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.panel{background:white;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #0001}input,button{font:inherit;padding:10px;border:1px solid #cbd5d1;border-radius:8px}button{background:#166534;color:white;cursor:pointer}button.secondary{background:#e6f1e9;color:#14532d}.line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.line input[type=number]{width:85px}.item{border-bottom:1px solid #eee;padding:12px 0}small{color:#64748b}#error{color:#b91c1c}h1{margin:0}#adminPanel{display:none}</style></head><body><header><h1>📦 Titan Packaging</h1><div>คำนวณราคากล่องพัสดุ</div></header><main><section class="panel"><div class="line"><input id="search" placeholder="ค้นหาชื่อสินค้า / ขนาด" aria-label="ค้นหาสินค้า"><button class="secondary" id="login">เข้าสู่ระบบผู้ดูแล</button><button class="secondary" id="logout" hidden>ออกจากระบบ</button></div><small id="status">กำลังเชื่อมต่อฐานข้อมูล...</small><p id="error" role="alert"></p></section><section class="panel"><h2>รายการสินค้า</h2><div id="products"></div></section><section class="panel"><h2>รายการคำนวณ</h2><div id="cart"></div><h2 id="total">รวม 0.00 บาท</h2><button class="secondary" id="clear">ล้างรายการ</button></section><section class="panel" id="adminPanel"><h2>จัดการสินค้า (ผู้ดูแล)</h2><form id="productForm"><input id="productId" type="hidden"><div class="line"><input id="name" required placeholder="ชื่อ / ขนาดกล่อง"><input id="price" type="number" min="0" step="0.01" required placeholder="ราคา (บาท)"><button type="submit">บันทึกสินค้า</button><button type="button" class="secondary" id="cancel">ยกเลิก</button></div></form></section></main><script type="module" src="app.js"></script></body></html>
+</head>
+<body>
+<header>
+  <div class="container top">
+    <div class="brand">
+      <div class="logo">📦</div>
+      <div>TITAN Packaging<div class="small">BOX PRICE CALCULATOR</div></div>
+    </div>
+    <div>
+      <button id="login" class="light">ผู้ดูแลระบบ</button>
+      <button id="logout" class="light" hidden>ออกจากระบบ</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <section class="hero">
+    <div class="eyebrow">PACKAGING MADE SIMPLE</div>
+    <h1>กล่องทุกไซส์<br>คิดราคาได้ในคลิกเดียว</h1>
+    <p>ค้นหากล่อง เลือกจำนวน และคำนวณราคาได้ทันที ข้อมูลสินค้าใช้ร่วมกันทุกอุปกรณ์</p>
+    <div class="stats">
+      <div><strong id="heroCount">—</strong><small>รุ่นกล่องในระบบ</small></div>
+      <div><strong>24/7</strong><small>ตรวจสอบราคาออนไลน์</small></div>
+    </div>
+  </section>
+
+  <p id="status" class="notice">กำลังเชื่อมต่อฐานข้อมูล...</p>
+  <p id="error" class="alert" hidden></p>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="section">
+        <div class="head-row">
+          <div>
+            <div class="kicker">PRODUCT CATALOG</div>
+            <h2>เลือกกล่องพัสดุ</h2>
+          </div>
+          <span class="count" id="count">กำลังโหลด</span>
+        </div>
+        <div class="filters">
+          <input id="search" class="field" placeholder="ค้นหาไซส์ เช่น AB, C, 2A">
+          <select id="sort" class="field">
+            <option value="name">เรียงตามไซส์</option>
+            <option value="low">ราคาต่ำสุด</option>
+            <option value="high">ราคาสูงสุด</option>
+          </select>
+        </div>
+      </div>
+      <div id="products" class="cards">
+        <div class="empty">กำลังโหลด...</div>
+      </div>
+    </section>
+
+    <div class="aside">
+      <section class="panel" id="cartPanel">
+        <div class="cart-head">
+          <div class="kicker">YOUR ORDER</div>
+          <h2>🧾 สรุปรายการ</h2>
+          <div class="muted" id="cartCount">0 ใบ</div>
+        </div>
+        <div id="cart" class="cart-items"></div>
+        <div class="cart-footer">
+          <div class="total">
+            <span>ยอดรวมทั้งหมด</span>
+            <strong id="total">฿0.00</strong>
+          </div>
+          <div class="action-row">
+            <button id="copy" class="btn">คัดลอกรายการ</button>
+            <button id="clear" class="light">ล้างทั้งหมด</button>
+          </div>
+          <p class="notice">ราคาต่อใบ • ไม่มีระบบตัดสต็อก</p>
+        </div>
+      </section>
+
+      <details id="adminPanel" class="panel" hidden>
+        <summary>⚙️ จัดการสินค้าและราคา</summary>
+        <p class="notice">เฉพาะผู้ดูแลระบบเท่านั้นที่แก้ไขข้อมูลได้</p>
+        <button id="importOld" class="import">📦 นำเข้ากล่องเดิม 35 รุ่น</button>
+        <hr style="border:0;border-top:1px solid #e5eee6;margin:18px 0">
+        <form id="productForm" class="form">
+          <input id="productId" type="hidden">
+          <label>ชื่อไซส์</label>
+          <input class="field" id="name" placeholder="เช่น AB" required>
+          <label>ขนาด (ซม.)</label>
+          <input class="field" id="size" placeholder="14 × 20 × 9 ซม.">
+          <label>ราคาต่อใบ (บาท)</label>
+          <input class="field" id="price" type="number" inputmode="decimal" min="0" step="0.01" required>
+          <div class="action-row">
+            <button class="btn" type="submit">บันทึกสินค้า</button>
+            <button type="button" class="light" id="cancel">ล้างฟอร์ม</button>
+          </div>
+        </form>
+      </details>
+    </div>
+  </main>
+
+  <footer class="footer">© Titan Packaging • ระบบคำนวณราคากล่องพัสดุ</footer>
+</div>
+
+<div class="mobile-total">
+  <div>
+    <div class="small">ยอดรวมทั้งหมด</div>
+    <strong id="mobileTotal">฿0.00</strong>
+  </div>
+  <a href="#cartPanel">ดูรายการ (<span id="mobileCount">0</span>)</a>
+</div>
+<div id="toast" hidden></div>
+
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js';
+import {getFirestore,collection,onSnapshot,getDocs,writeBatch,doc,addDoc,updateDoc,deleteDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
+
+const firebaseConfig={
+  apiKey:'AIzaSyDSx_MuJ1C_IOXFj037sjH5qxbFuBq_gGg',
+  authDomain:'titan-packaging-84c77.firebaseapp.com',
+  projectId:'titan-packaging-84c77',
+  storageBucket:'titan-packaging-84c77.firebasestorage.app',
+  messagingSenderId:'1096645578198',
+  appId:'1:1096645578198:web:597326c7e07fb391a9e877'
+};
+const ADMIN_EMAIL='mr.surasak.kitisak@gmail.com';
+const app=initializeApp(firebaseConfig),
+db=getFirestore(app),
+auth=getAuth(app),
+provider=new GoogleAuthProvider(),
+ref=collection(db,'products');
+
+const $=id=>document.getElementById(id);
+let products=[],cart=new Map(),admin=false;
+
+const money=v=>'฿'+Number(v).toLocaleString('th-TH',{
+  minimumFractionDigits:2,maximumFractionDigits:2
+});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+const code=p=>String(p.legacyCode||p.name||'')
+  .replace(/^กล่อง\s*Ka\s*3\s*ชั้น\s*/i,'')
+  .split(/\s+[—–]\s+/)[0].trim();
+const dimension=p=>p.size||
+  String(p.name||'').split(/\s+[—–]\s+/).slice(1).join(' — ');
+const isAdmin=u=>!!u&&u.email===ADMIN_EMAIL&&u.emailVerified;
+const find=id=>products.find(p=>p.id===id);
+
+function notify(t){
+  $('toast').textContent=t;
+  $('toast').hidden=false;
+  clearTimeout(notify.t);
+  notify.t=setTimeout(()=>$('toast').hidden=true,2400);
+}
+function error(e){
+  console.error(e);
+  $('error').hidden=false;
+  $('error').textContent=e?.message||String(e);
+}
+function resetForm(){
+  $('productForm').reset();
+  $('productId').value='';
+}
+function renderProducts(){
+  let q=$('search').value.toLocaleLowerCase('th').trim();
+  let items=products.filter(p=>
+    `${p.name} ${p.legacyCode} ${dimension(p)}`
+      .toLocaleLowerCase('th').includes(q)
+  );
+  let sort=$('sort').value;
+  if(sort==='low')items.sort((a,b)=>a.price-b.price);
+  else if(sort==='high')items.sort((a,b)=>b.price-a.price);
+  else items.sort((a,b)=>code(a).localeCompare(code(b),'th',{numeric:true}));
+
+  $('count').textContent=items.length+' รุ่น';
+  $('heroCount').textContent=products.length;
+  $('products').innerHTML=items.length
+    ?items.map(p=>`<article class="product">
+      <div class="product-top">
+        <div class="symbol">📦</div>
+        <div><div class="muted">กล่องพัสดุ</div>
+        <h3>ไซส์ ${esc(code(p))}</h3></div>
+      </div>
+      <div class="size">${esc(dimension(p)||'ยังไม่ระบุขนาด')}</div>
+      <div class="bottom">
+        <div><div class="muted">ราคา / ใบ</div>
+        <div class="price">${money(p.price)} <small>บาท</small></div></div>
+        <button class="add" data-action="add" data-id="${esc(p.id)}">＋ เพิ่ม</button>
+      </div>
+      ${admin?`<div class="admin-links">
+        <button data-action="edit" data-id="${esc(p.id)}">✎ แก้ไข</button>
+        <button data-action="delete" data-id="${esc(p.id)}">ลบสินค้า</button>
+      </div>`:''}
+    </article>`).join('')
+    :`<div class="empty">📦<br>
+       ${products.length?'ไม่พบกล่องที่ค้นหา':'ยังไม่มีสินค้าในฐานข้อมูล'}<br>
+       ${admin?'กดนำเข้ากล่องเดิมในเมนูผู้ดูแล':'กรุณาติดต่อผู้ดูแลระบบ'}
+     </div>`;
+}
+function renderCart(){
+  let cents=0,qty=0,out=[];
+  for(const [id,n] of cart){
+    const p=find(id);
+    if(!p){cart.delete(id);continue}
+    const subtotal=Math.round(p.price*100)*n;
+    cents+=subtotal;
+    qty+=n;
+    out.push(`<div class="cart-item">
+      <b>กล่องไซส์ ${esc(code(p))}</b>
+      <div class="muted">${money(p.price)} / ใบ</div>
+      <div class="cart-line">
+        <div class="quantity">
+          <button data-op="minus" data-id="${esc(id)}">−</button>
+          <input type="number" min="1" max="1000000" value="${n}"
+                 data-op="qty" data-id="${esc(id)}" aria-label="จำนวน">
+          <button data-op="plus" data-id="${esc(id)}">+</button>
+        </div>
+        <b>${money(subtotal/100)}</b>
+        <button class="remove" data-op="remove" data-id="${esc(id)}">×</button>
+      </div>
+    </div>`);
+  }
+  $('cart').innerHTML=out.join('')||
+    '<div class="empty">🛒<br>ยังไม่มีสินค้าในรายการ<br>เลือกกล่องแล้วกดเพิ่มได้เลย</div>';
+  $('total').textContent=money(cents/100);
+  $('mobileTotal').textContent=money(cents/100);
+  $('mobileCount').textContent=qty;
+  $('cartCount').textContent=qty+' ใบ';
+}
+
+$('search').oninput=renderProducts;
+$('sort').onchange=renderProducts;
+
+$('products').onclick=async e=>{
+  const b=e.target.closest('button[data-action]');
+  if(!b)return;
+  const p=find(b.dataset.id);
+  if(!p)return;
+  const action=b.dataset.action;
+
+  if(action==='add'){
+    cart.set(p.id,(cart.get(p.id)||0)+1);
+    renderCart();
+    notify('เพิ่มสินค้าแล้ว');
+    return;
+  }
+  if(!admin)return;
+  if(action==='edit'){
+    $('productId').value=p.id;
+    $('name').value=code(p);
+    $('size').value=dimension(p);
+    $('price').value=p.price;
+    $('adminPanel').open=true;
+    $('adminPanel').scrollIntoView({behavior:'smooth'});
+  }
+  if(action==='delete'&&confirm('ลบกล่อง '+code(p)+' หรือไม่?')){
+    try{
+      await deleteDoc(doc(db,'products',p.id));
+      cart.delete(p.id);
+      renderCart();
+      notify('ลบสินค้าแล้ว');
+    }catch(e){error(e)}
+  }
+};
+
+$('cart').onclick=e=>{
+  const b=e.target.closest('button[data-op]');
+  if(!b)return;
+  const id=b.dataset.id,n=cart.get(id)||0,op=b.dataset.op;
+  if(op==='remove'||(op==='minus'&&n<=1))cart.delete(id);
+  else if(op==='minus')cart.set(id,n-1);
+  else if(op==='plus'&&n<1000000)cart.set(id,n+1);
+  renderCart();
+};
+
+$('cart').onchange=e=>{
+  const input=e.target.closest('input[data-op="qty"]');
+  if(!input)return;
+  const n=Number(input.value);
+  if(!Number.isSafeInteger(n)||n<1||n>1000000){
+    notify('กรอกจำนวน 1 ถึง 1,000,000');
+    renderCart();
+    return;
+  }
+  cart.set(input.dataset.id,n);
+  renderCart();
+};
+
+$('clear').onclick=()=>{
+  if(cart.size&&!confirm('ล้างรายการทั้งหมดหรือไม่?'))return;
+  cart.clear();
+  renderCart();
+};
+
+$('copy').onclick=async()=>{
+  let text=['Titan Packaging — รายการคำนวณ'],total=0;
+  for(const [id,n] of cart){
+    const p=find(id);
+    if(!p)continue;
+    let cents=Math.round(p.price*100)*n;
+    total+=cents;
+    text.push(`ไซส์ ${code(p)} × ${n} ใบ = ${money(cents/100)}`);
+  }
+  if(!total&&text.length===1)return notify('ยังไม่มีรายการ');
+  text.push('ยอดรวม '+money(total/100));
+  try{
+    await navigator.clipboard.writeText(text.join('\n'));
+    notify('คัดลอกแล้ว');
+  }catch{
+    window.prompt('คัดลอกรายการ',text.join('\n'));
+  }
+};
+
+$('cancel').onclick=resetForm;
+$('productForm').onsubmit=async e=>{
+  e.preventDefault();
+  if(!admin)return;
+  const name=$('name').value.trim(),
+        size=$('size').value.trim(),
+        price=Number($('price').value),
+        id=$('productId').value;
+  if(!name||!Number.isFinite(price)||price<0)
+    return notify('ตรวจสอบข้อมูลสินค้า');
+
+  const data={
+    name:size?`${name} — ${size}`:name,
+    legacyCode:name,
+    size,
+    price:Math.round(price*100)/100,
+    updatedAt:serverTimestamp()
+  };
+  try{
+    if(id)await updateDoc(doc(db,'products',id),data);
+    else await addDoc(ref,{...data,createdAt:serverTimestamp()});
+    resetForm();
+    notify('บันทึกสินค้าแล้ว');
+  }catch(e){error(e)}
+};
+
+$('login').onclick=async()=>{
+  try{
+    await signInWithPopup(auth,provider);
+  }catch(e){
+    if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment'].includes(e.code)){
+      try{await signInWithRedirect(auth,provider)}
+      catch(e){error(e)}
+    }else if(e.code!=='auth/popup-closed-by-user')error(e);
+  }
+};
+
+$('logout').onclick=()=>signOut(auth).catch(error);
+getRedirectResult(auth).catch(error);
+
+onAuthStateChanged(auth,u=>{
+  admin=isAdmin(u);
+  $('login').hidden=!!u;
+  $('logout').hidden=!u;
+  $('adminPanel').hidden=!admin;
+  $('status').textContent=u
+    ?(admin?'ผู้ดูแลระบบ: '+u.email:'บัญชี '+u.email+' — ดูราคาอย่างเดียว')
+    :'ลูกค้าสามารถดูราคาและคำนวณได้โดยไม่ต้องเข้าสู่ระบบ';
+  if(!admin)resetForm();
+  renderProducts();
+});
+
+onSnapshot(ref,s=>{
+  products=s.docs.map(d=>({
+    id:d.id,...d.data(),price:Number(d.data().price)
+  })).filter(p=>p.name&&Number.isFinite(p.price));
+  $('error').hidden=true;
+  renderProducts();
+  renderCart();
+},error);
+
+const ORIGINAL=[
+['00 ไม่พิมพ์','9.75 × 14 × 6 ซม.',.84],
+['00','9.75 × 14 × 6 ซม.',.90],
+['0','11 × 17 × 6 ซม.',1.12],
+['0+4','11 × 17 × 10 ซม.',1.37],
+['A','14 × 20 × 6 ซม.',1.60],
+['AA','13 × 17 × 7 ซม.',1.45],
+['2A','14 × 20 × 12 ซม.',2.09],
+['AB','14 × 20 × 9 ซม.',1.87],
+['B','17 × 25 × 9 ซม.',2.51],
+['B+7','17 × 25 × 16 ซม.',3.41],
+['2B','17 × 25 × 17 ซม.',3.41],
+['C','20 × 30 × 11 ซม.',3.53],
+['CD','15 × 15 × 15 ซม.',2.39],
+['D','22 × 35 × 14 ซม.',4.70],
+['D-7','22 × 35 × 7 ซม.',4.42],
+['D+11','22 × 35 × 25 ซม.',6.73],
+['2D','22 × 35 × 28 ซม.',6.97],
+['E','24 × 40 × 17 ซม.',6.19],
+['F เล็ก','31 × 36 × 13 ซม.',7.40],
+['F กลาง','30 × 45 × 20 ซม.',9.70],
+['F ใหญ่','32 × 48 × 30 ซม.',12.77],
+['G','31 × 36 × 26 ซม.',9.46],
+['H','40 × 45 × 35 ซม.',15.64],
+['7','35 × 50 × 32 ซม.',14.67],
+['C+8','20 × 30 × 19 ซม.',4.67],
+['C+9','20 × 30 × 20 ซม.',4.90],
+['M','27 × 43 × 20 ซม.',7.90],
+['M+','35 × 45 × 25 ซม.',11.61],
+['L','40 × 50 × 30 ซม.',15.40],
+['2C','20 × 30 × 22 ซม.',5.07],
+['Q','14.5 × 22.5 × 7 ซม.',2.09],
+['T2','23 × 32 × 6 ซม.',4.46],
+['I','45 × 55 × 40 ซม.',20.68],
+['P1','24 × 58 × 17 ซม.',9.26],
+['P2','33 × 58 × 24 ซม.',14.05]
+];
+
+$('importOld').onclick=async()=>{
+  if(!admin||!isAdmin(auth.currentUser))return;
+  if(!confirm('นำเข้ากล่องเดิม 35 รุ่น? จะไม่เขียนทับสินค้าที่แก้ไขไว้แล้ว'))return;
+  const btn=$('importOld');
+  btn.disabled=true;
+  try{
+    const snapshot=await getDocs(ref),existing=new Map();
+    for(const d of snapshot.docs){
+      let key=code(d.data()).toLocaleUpperCase('en');
+      if(!existing.has(key))existing.set(key,{ref:d.ref,data:d.data()});
+    }
+    const batch=writeBatch(db);
+    let add=0,update=0;
+    for(const [name,size,price] of ORIGINAL){
+      const found=existing.get(name.toLocaleUpperCase('en'));
+      const data={
+        name:`${name} — ${size}`,
+        legacyCode:name,
+        size,
+        price,
+        updatedAt:serverTimestamp()
+      };
+      if(!found){
+        batch.set(doc(ref),{...data,createdAt:serverTimestamp()});
+        add++;
+      }else if(!found.data.size&&!String(found.data.name||'').includes(' — ')){
+        batch.update(found.ref,data);
+        update++;
+      }
+    }
+    if(add+update)await batch.commit();
+    alert(`สำเร็จ! เพิ่ม ${add} รายการ แก้ข้อมูลตัวอย่าง ${update} รายการ`);
+  }catch(e){error(e)}
+  finally{btn.disabled=false}
+};
+
+renderCart();
+</script>
+</body>
+</html>
