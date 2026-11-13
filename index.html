@@ -1,20 +1,20 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#166534">
 <title>Titan Packaging</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f2f6f2;color:#173a2a;font-family:system-ui,sans-serif}
-header{background:#166534;color:#fff;padding:20px 16px}
+body{margin:0;background:#f3f7f4;color:#183c2c;font-family:system-ui,sans-serif}
+header{background:#166534;color:white;padding:20px}
 header h1{margin:0;font-size:24px}
 small{display:block;font-size:11px;font-weight:400;opacity:.75}
 main{max-width:850px;margin:auto;padding:14px}
-.panel{background:#fff;border-radius:17px;padding:18px;margin:14px 0;box-shadow:0 2px 10px #0001}
-h2{font-size:19px;margin:0 0 12px}
+.panel{background:white;border-radius:17px;padding:18px;margin:14px 0;box-shadow:0 2px 10px #0001}
+h2{font-size:19px;margin:0 0 14px}
 button{background:#166534;color:white;border:0;border-radius:11px;padding:12px;cursor:pointer;font:inherit}
 button.secondary{background:#e6eee7;color:#166534}
 button:disabled{opacity:.5}
@@ -31,18 +31,17 @@ nav button.active{background:white;color:#166534}
 .item strong{display:block}
 .item small{color:#65776b}
 .item button{flex-shrink:0}
+.details{flex:1;min-width:0}
 .total{background:#edf5ef;border-radius:12px;padding:18px;display:flex;justify-content:space-between;font-weight:bold}
 .total b{font-size:22px}
 .qty{width:75px;margin:0}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions button{flex:1;min-width:125px}
 .hidden{display:none!important}
 .notice{font-size:13px;color:#61796a}
-.error{color:#b42318}
-.cart-details{flex:1;min-width:0}
+.color-line{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:13px}
+.dot{display:inline-block;width:17px;height:17px;min-width:17px;border-radius:50%;border:1px solid #a7b4a9;box-shadow:0 0 0 2px #f1f5f2}
 .cart-controls{display:flex;align-items:center;gap:7px}
-.cart-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.cart-line select{width:auto;max-width:190px;margin:6px 0}
-.action-wide{flex:1;min-width:135px}
 @media(min-width:700px){.categories{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
@@ -75,13 +74,13 @@ nav button.active{background:white;color:#166534}
 <b id="total">฿0.00</b>
 </div>
 <div class="actions" style="margin-top:15px">
-<button class="action-wide" id="download">📷 บันทึกเป็นรูป PNG<small>Save Image</small></button>
-<button class="action-wide" id="copy">คัดลอกรายการ<small>Copy Summary</small></button>
-<button class="secondary action-wide" id="clear">ล้างรายการ<small>Clear Cart</small></button>
+<button id="download">📷 บันทึกเป็น JPG<small>Save JPG Image</small></button>
+<button id="copy">คัดลอกรายการ<small>Copy Summary</small></button>
+<button class="secondary" id="clear">ล้างรายการ<small>Clear Cart</small></button>
 </div>
-<p class="notice">เลือกสีเทปกาวได้ในรายการที่ซื้อ โดยไม่เปลี่ยนราคาสินค้า / Tape color does not change price.</p>
 </div>
 </section>
+
 <section id="adminPage" class="hidden">
 <div id="loginPanel" class="panel">
 <h2>เข้าสู่ระบบผู้ดูแล <small>Admin Login</small></h2>
@@ -93,6 +92,7 @@ nav button.active{background:white;color:#166534}
 <button type="submit">เข้าสู่ระบบ / Sign In</button>
 </form>
 </div>
+
 <div id="editorPanel" class="hidden">
 <div class="panel">
 <h2>⚙️ จัดการสินค้า <small>Manage Products</small></h2>
@@ -112,8 +112,11 @@ nav button.active{background:white;color:#166534}
 <input id="price" type="number" min="0" step="0.01" required>
 <label>หน่วย / Unit</label>
 <input id="unit" placeholder="ชิ้น / ม้วน / แพ็ก" required maxlength="40">
-<label>สีเทปกาวเริ่มต้น / Default Tape Color</label>
+<div id="colorField">
+<label>สีเทปกาว / Tape Color</label>
 <select id="color"></select>
+<p class="notice">ลูกค้าจะเห็นเฉพาะสีที่บันทึกไว้สำหรับสินค้านี้ / Customers see only the saved color.</p>
+</div>
 <div class="actions">
 <button type="submit">บันทึก / Save</button>
 <button type="button" class="secondary" id="reset">ล้างฟอร์ม / Reset</button>
@@ -128,59 +131,84 @@ nav button.active{background:white;color:#166534}
 <p id="adminMessage" class="notice"></p>
 </section>
 </main>
+
 <script type="module">
-import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
-import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
-import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 const firebaseConfig={
-apiKey:'AIzaSyDSx_MuJ1C_IOXFj037sjH5qxbFuBq_gGg',
-authDomain:'titan-packaging-84c77.firebaseapp.com',
-projectId:'titan-packaging-84c77',
-storageBucket:'titan-packaging-84c77.firebasestorage.app',
-messagingSenderId:'1096645578198',
-appId:'1:1096645578198:web:597326c7e07fb391a9e877',
-measurementId:'G-DP6N8DQZ3N'
+apiKey:"AIzaSyDSx_MuJ1C_IOXFj037sjH5qxbFuBq_gGg",
+authDomain:"titan-packaging-84c77.firebaseapp.com",
+projectId:"titan-packaging-84c77",
+storageBucket:"titan-packaging-84c77.firebasestorage.app",
+messagingSenderId:"1096645578198",
+appId:"1:1096645578198:web:597326c7e07fb391a9e877",
+measurementId:"G-DP6N8DQZ3N"
 };
-const ADMIN='mr.surasak.kitisak@gmail.com';
+
+const ADMIN="mr.surasak.kitisak@gmail.com";
 const $=id=>document.getElementById(id);
-const money=n=>'฿'+Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money=n=>"฿"+Number(n).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
 const cats=[
-['box','📦','กล่อง','Boxes'],
-['tape','🧻','เทปกาว','Tape'],
-['bubble','🫧','บับเบิ้ล','Bubble Wrap'],
-['mailer','✉️','ซองไปรษณีย์','Mailers']
+["box","📦","กล่อง","Boxes"],
+["tape","🧻","เทปกาว","Tape"],
+["bubble","🫧","บับเบิ้ล","Bubble Wrap"],
+["mailer","✉️","ซองไปรษณีย์","Mailers"]
 ];
 const colors=[
-['','ไม่ระบุ / None'],
-['ใส','ใส / Clear'],
-['น้ำตาล','น้ำตาล / Brown'],
-['แดง','แดง / Red'],
-['น้ำเงิน','น้ำเงิน / Blue'],
-['เขียว','เขียว / Green'],
-['เหลือง','เหลือง / Yellow'],
-['ดำ','ดำ / Black'],
-['ขาว','ขาว / White']
+["","ไม่ระบุ / None","#ffffff"],
+["ใส","ใส / Clear","#f1f5f9"],
+["น้ำตาล","น้ำตาล / Brown","#a16207"],
+["แดง","แดง / Red","#dc2626"],
+["น้ำเงิน","น้ำเงิน / Blue","#2563eb"],
+["เขียว","เขียว / Green","#16a34a"],
+["เหลือง","เหลือง / Yellow","#eab308"],
+["ดำ","ดำ / Black","#171717"],
+["ขาว","ขาว / White","#ffffff"]
 ];
-let products=[],cart={},active='box',auth=null,db=null;
+
+let products=[],cart={},active="box",auth=null,db=null;
 const validAdmin=u=>!!u&&u.email===ADMIN&&u.emailVerified;
-const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const cartKey=(id,color)=>JSON.stringify([id,color||'']);
-const parseKey=key=>{try{const a=JSON.parse(key);if(Array.isArray(a)&&a.length===2)return a}catch{}return [key,'']};
+const escapeHTML=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const colorInfo=name=>colors.find(c=>c[0]===name);
+const cartKey=(id,color)=>JSON.stringify([id,color||""]);
+const parseKey=key=>{
+try{
+const a=JSON.parse(key);
+if(Array.isArray(a)&&a.length===2)return a;
+}catch{}
+return [key,""];
+};
+const colorHTML=name=>{
+if(!name)return "";
+const c=colorInfo(name);
+const hex=c?c[2]:"#d1d5db";
+return `<div class="color-line"><span class="dot" style="background:${hex}"></span><span>${escapeHTML(c?c[1]:name)}</span></div>`;
+};
 
 function showPage(page){
-$('customerPage').classList.toggle('hidden',page!=='customer');
-$('adminPage').classList.toggle('hidden',page!=='admin');
-$('customerTab').classList.toggle('active',page==='customer');
-$('adminTab').classList.toggle('active',page==='admin');
+$("customerPage").classList.toggle("hidden",page!=="customer");
+$("adminPage").classList.toggle("hidden",page!=="admin");
+$("customerTab").classList.toggle("active",page==="customer");
+$("adminTab").classList.toggle("active",page==="admin");
 }
-$('customerTab').onclick=()=>showPage('customer');
-$('adminTab').onclick=()=>showPage('admin');
-$('color').innerHTML=colors.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join('');
+$("customerTab").onclick=()=>showPage("customer");
+$("adminTab").onclick=()=>showPage("admin");
+
+$("color").innerHTML=colors.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join("");
+function toggleColorField(){
+$("colorField").classList.toggle("hidden",$("category").value!=="tape");
+}
+$("category").onchange=toggleColorField;
+toggleColorField();
 
 function renderCategories(){
-$('categories').innerHTML=cats.map(c=>`<button class="category ${active===c[0]?'active':''}" data-cat="${c[0]}"><span>${c[1]}</span>${c[2]}<small>${c[3]}</small></button>`).join('');
-document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{
+$("categories").innerHTML=cats.map(c=>`
+<button class="category ${active===c[0]?"active":""}" data-cat="${c[0]}">
+<span>${c[1]}</span>${c[2]}<small>${c[3]}</small>
+</button>`).join("");
+document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
 active=b.dataset.cat;
 renderCategories();
 renderProducts();
@@ -188,13 +216,22 @@ renderProducts();
 }
 
 function renderProducts(){
-const q=$('search').value.trim().toLocaleLowerCase('th');
-const list=products.filter(p=>p.category===active&&String(p.name).toLocaleLowerCase('th').includes(q));
-$('products').innerHTML=list.length?list.map(p=>`<div class="item"><div><strong>${escapeHTML(p.name)}</strong><small>${escapeHTML(p.color||'')} ${money(p.price)} / ${escapeHTML(p.unit||'ชิ้น')}</small></div><button data-add="${escapeHTML(p.id)}">+ เพิ่ม<small>Add</small></button></div>`).join(''):'<p class="notice">ยังไม่มีสินค้า / No products</p>';
-document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
+const q=$("search").value.trim().toLocaleLowerCase("th");
+const list=products.filter(p=>p.category===active&&String(p.name).toLocaleLowerCase("th").includes(q));
+$("products").innerHTML=list.length?list.map(p=>`
+<div class="item">
+<div class="details">
+<strong>${escapeHTML(p.name)}</strong>
+<small>${money(p.price)} / ${escapeHTML(p.unit||"ชิ้น")}</small>
+${p.category==="tape"?colorHTML(p.color):""}
+</div>
+<button data-add="${escapeHTML(p.id)}">+ เพิ่ม<small>Add</small></button>
+</div>`).join(""):'<p class="notice">ยังไม่มีสินค้า / No products</p>';
+
+document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{
 const p=products.find(x=>x.id===b.dataset.add);
 if(!p)return;
-const key=cartKey(p.id,p.category==='tape'?(p.color||''):'');
+const key=cartKey(p.id,p.category==="tape"?(p.color||""):"");
 cart[key]=(cart[key]||0)+1;
 renderCart();
 });
@@ -210,163 +247,196 @@ return {key,id,color,qty,p:products.find(x=>x.id===id)};
 function renderCart(){
 const rows=entries();
 let sum=0;
-$('cart').replaceChildren();
+$("cart").replaceChildren();
+
 for(const e of rows){
-const {key,color,qty,p}=e;
+const {key,qty,p}=e;
 sum+=p.price*qty;
-const item=document.createElement('div');
-item.className='item';
-const details=document.createElement('div');
-details.className='cart-details';
-const strong=document.createElement('strong');
+const item=document.createElement("div");
+item.className="item";
+const details=document.createElement("div");
+details.className="details";
+const strong=document.createElement("strong");
 strong.textContent=p.name;
 details.append(strong);
-const sub=document.createElement('small');
+
+const sub=document.createElement("small");
 sub.textContent=`${money(p.price)} × ${qty} = ${money(p.price*qty)}`;
 details.append(sub);
-if(p.category==='tape'){
-const label=document.createElement('label');
-label.textContent='สีเทปกาว / Tape Color';
-label.style.display='block';
-const select=document.createElement('select');
-select.setAttribute('aria-label','สีเทปกาว '+p.name);
-for(const c of colors){
-const opt=document.createElement('option');
-opt.value=c[0];
-opt.textContent=c[1];
-select.append(opt);
+
+if(p.category==="tape"&&p.color){
+const color=document.createElement("div");
+color.className="color-line";
+const dot=document.createElement("span");
+dot.className="dot";
+dot.style.background=colorInfo(p.color)?.[2]||"#d1d5db";
+const label=document.createElement("span");
+label.textContent=colorInfo(p.color)?.[1]||p.color;
+color.append(dot,label);
+details.append(color);
 }
-select.value=color;
-select.onchange=()=>{
-const newKey=cartKey(p.id,select.value);
-if(newKey!==key){
-cart[newKey]=(cart[newKey]||0)+qty;
-delete cart[key];
-renderCart();
-}
-};
-details.append(label,select);
-}
-const controls=document.createElement('div');
-controls.className='cart-controls';
-const input=document.createElement('input');
-input.className='qty';
-input.type='number';
-input.min='0';
-input.step='1';
+
+const controls=document.createElement("div");
+controls.className="cart-controls";
+const input=document.createElement("input");
+input.className="qty";
+input.type="number";
+input.min="0";
+input.step="1";
 input.value=qty;
-input.setAttribute('aria-label','จำนวน '+p.name);
+input.setAttribute("aria-label","จำนวน "+p.name);
 input.onchange=()=>{
 const n=Number(input.value);
-if(!Number.isSafeInteger(n)||n<0){input.value=qty;return}
-if(n)cart[key]=n;else delete cart[key];
+if(!Number.isSafeInteger(n)||n<0){
+input.value=qty;
+return;
+}
+if(n)cart[key]=n;
+else delete cart[key];
 renderCart();
 };
-const remove=document.createElement('button');
-remove.type='button';
-remove.className='secondary';
-remove.textContent='×';
-remove.setAttribute('aria-label','ลบ '+p.name);
-remove.onclick=()=>{delete cart[key];renderCart()};
+
+const remove=document.createElement("button");
+remove.type="button";
+remove.className="secondary";
+remove.textContent="×";
+remove.setAttribute("aria-label","ลบ "+p.name);
+remove.onclick=()=>{
+delete cart[key];
+renderCart();
+};
+
 controls.append(input,remove);
 item.append(details,controls);
-$('cart').append(item);
+$("cart").append(item);
 }
+
 if(!rows.length){
-const p=document.createElement('p');
-p.className='notice';
-p.textContent='ยังไม่มีสินค้า / Cart is empty';
-$('cart').append(p);
+const p=document.createElement("p");
+p.className="notice";
+p.textContent="ยังไม่มีสินค้า / Cart is empty";
+$("cart").append(p);
 }
-$('total').textContent=money(sum);
-$('download').disabled=!rows.length;
+$("total").textContent=money(sum);
+$("download").disabled=!rows.length;
 }
 
 function summary(){
 let total=0;
-const lines=['TITAN PACKAGING',new Date().toLocaleString('th-TH')];
+const lines=["TITAN PACKAGING",new Date().toLocaleString("th-TH")];
 for(const e of entries()){
-const color=e.p.category==='tape'&&e.color?' (สี'+e.color+')':'';
+const color=e.p.category==="tape"&&e.p.color?" (สี"+e.p.color+")":"";
 lines.push(`${e.p.name}${color} × ${e.qty} @ ${money(e.p.price)} = ${money(e.p.price*e.qty)}`);
 total+=e.p.price*e.qty;
 }
-lines.push('ยอดรวม / Total: '+money(total));
-return lines.join('\n');
+lines.push("ยอดรวม / Total: "+money(total));
+return lines.join("\n");
 }
 
-$('copy').onclick=async()=>{
-if(!entries().length)return alert('กรุณาเพิ่มสินค้าก่อน');
+$("copy").onclick=async()=>{
+if(!entries().length)return alert("กรุณาเพิ่มสินค้าก่อน");
 try{
 await navigator.clipboard.writeText(summary());
-alert('คัดลอกแล้ว / Copied');
+alert("คัดลอกแล้ว / Copied");
 }catch{
-prompt('คัดลอกรายการ / Copy',summary());
+prompt("คัดลอกรายการ / Copy",summary());
 }
 };
-$('clear').onclick=()=>{cart={};renderCart()};
 
-$('download').onclick=async()=>{
+$("clear").onclick=()=>{
+cart={};
+renderCart();
+};
+
+$("download").onclick=async()=>{
 const rows=entries();
 if(!rows.length)return;
+
 try{
-const width=1000,pad=58,rowH=88,height=270+rows.length*rowH+120;
-const canvas=document.createElement('canvas');
+const width=1000,pad=58;
+const rowH=100;
+const height=400+rows.length*rowH;
+const canvas=document.createElement("canvas");
 canvas.width=width*2;
 canvas.height=height*2;
-const ctx=canvas.getContext('2d');
+const ctx=canvas.getContext("2d");
 ctx.scale(2,2);
-ctx.fillStyle='#fff';
+
+ctx.fillStyle="#ffffff";
 ctx.fillRect(0,0,width,height);
-ctx.fillStyle='#166534';
+ctx.fillStyle="#166534";
 ctx.fillRect(0,0,width,130);
-ctx.fillStyle='#fff';
-ctx.font='bold 40px system-ui,sans-serif';
-ctx.fillText('TITAN PACKAGING',pad,62);
-ctx.font='22px system-ui,sans-serif';
-ctx.fillText('Packaging Price Summary',pad,99);
-ctx.fillStyle='#334155';
-ctx.font='22px system-ui,sans-serif';
-ctx.fillText('วันที่ / Date: '+new Date().toLocaleString('th-TH'),pad,174);
-ctx.fillStyle='#166534';
-ctx.font='bold 22px system-ui,sans-serif';
-ctx.fillText('รายการสินค้า / Items',pad,220);
-ctx.fillText('จำนวน / Qty',610,220);
-ctx.fillText('รวม / Amount',785,220);
+ctx.fillStyle="#ffffff";
+ctx.font="bold 40px system-ui,sans-serif";
+ctx.fillText("TITAN PACKAGING",pad,62);
+ctx.font="22px system-ui,sans-serif";
+ctx.fillText("Packaging Price Summary",pad,99);
+
+ctx.fillStyle="#334155";
+ctx.font="22px system-ui,sans-serif";
+ctx.fillText("วันที่ / Date: "+new Date().toLocaleString("th-TH"),pad,174);
+
+ctx.fillStyle="#166534";
+ctx.font="bold 22px system-ui,sans-serif";
+ctx.fillText("รายการสินค้า / Items",pad,220);
+ctx.fillText("จำนวน",625,220);
+ctx.fillText("รวม / Amount",785,220);
+
 let total=0;
-ctx.textBaseline='middle';
+ctx.textBaseline="middle";
+
 rows.forEach((e,i)=>{
 const y=265+i*rowH;
-ctx.strokeStyle='#e2e8f0';
+ctx.strokeStyle="#e2e8f0";
 ctx.beginPath();
-ctx.moveTo(pad,y+50);
-ctx.lineTo(width-pad,y+50);
+ctx.moveTo(pad,y+62);
+ctx.lineTo(width-pad,y+62);
 ctx.stroke();
-ctx.fillStyle='#173a2a';
-ctx.font='bold 22px system-ui,sans-serif';
-const name=e.p.name.length>34?e.p.name.slice(0,33)+'…':e.p.name;
-ctx.fillText(name,pad,y-14);
-ctx.font='19px system-ui,sans-serif';
-const extra=e.p.category==='tape'&&e.color?' | สี / Color: '+e.color:'';
-ctx.fillText(money(e.p.price)+' / '+(e.p.unit||'ชิ้น')+extra,pad,y+17);
-ctx.font='22px system-ui,sans-serif';
+
+ctx.fillStyle="#173a2a";
+ctx.font="bold 22px system-ui,sans-serif";
+const name=e.p.name.length>34?e.p.name.slice(0,33)+"…":e.p.name;
+ctx.fillText(name,pad,y-20);
+
+ctx.font="19px system-ui,sans-serif";
+ctx.fillText(money(e.p.price)+" / "+(e.p.unit||"ชิ้น"),pad,y+10);
+
+if(e.p.category==="tape"&&e.p.color){
+const c=colorInfo(e.p.color);
+ctx.beginPath();
+ctx.arc(pad+10,y+37,9,0,Math.PI*2);
+ctx.fillStyle=c?c[2]:"#d1d5db";
+ctx.fill();
+ctx.strokeStyle="#94a3b8";
+ctx.stroke();
+ctx.fillStyle="#334155";
+ctx.font="18px system-ui,sans-serif";
+ctx.fillText("สี / Color: "+e.p.color,pad+27,y+37);
+}
+
+ctx.fillStyle="#173a2a";
+ctx.font="22px system-ui,sans-serif";
 ctx.fillText(String(e.qty),640,y);
 ctx.fillText(money(e.p.price*e.qty),785,y);
 total+=e.p.price*e.qty;
 });
+
 const bottom=280+rows.length*rowH;
-ctx.fillStyle='#edf5ef';
+ctx.fillStyle="#edf5ef";
 ctx.fillRect(pad,bottom,width-pad*2,74);
-ctx.fillStyle='#166534';
-ctx.font='bold 30px system-ui,sans-serif';
-ctx.fillText('ยอดรวม / Total',pad+18,bottom+38);
-ctx.textAlign='right';
+ctx.fillStyle="#166534";
+ctx.font="bold 30px system-ui,sans-serif";
+ctx.fillText("ยอดรวม / Total",pad+18,bottom+38);
+ctx.textAlign="right";
 ctx.fillText(money(total),width-pad-18,bottom+38);
-ctx.textAlign='left';
-const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
-if(!blob)throw new Error('ไม่สามารถสร้างรูปได้');
-const filename='Titan-Packaging-'+new Date().toISOString().slice(0,10)+'.png';
+ctx.textAlign="left";
+
+const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.94));
+if(!blob)throw new Error("ไม่สามารถสร้างรูปได้");
+
+const filename="Titan-Packaging-"+new Date().toISOString().slice(0,10)+".jpg";
 const url=URL.createObjectURL(blob);
-const a=document.createElement('a');
+const a=document.createElement("a");
 a.href=url;
 a.download=filename;
 document.body.append(a);
@@ -374,73 +444,93 @@ a.click();
 a.remove();
 setTimeout(()=>URL.revokeObjectURL(url),10000);
 }catch(e){
-alert('บันทึกรูปไม่สำเร็จ / Save failed: '+e.message);
+alert("บันทึกรูปไม่สำเร็จ / Save failed: "+e.message);
 }
 };
 
 function resetForm(){
-$('productForm').reset();
-$('editId').value='';
+$("productForm").reset();
+$("editId").value="";
+toggleColorField();
 }
-$('reset').onclick=resetForm;
-function adminMessage(t){$('adminMessage').textContent=t}
+$("reset").onclick=resetForm;
+function adminMessage(t){$("adminMessage").textContent=t}
 
 function renderAdmin(){
-$('adminProducts').innerHTML=products.length?products.map(p=>`<div class="item"><div><strong>${escapeHTML(p.name)}</strong><small>${money(p.price)} / ${escapeHTML(p.unit||'ชิ้น')} · ${escapeHTML(p.color||'')}</small></div><button data-edit="${escapeHTML(p.id)}">แก้ไข</button><button class="secondary" data-delete="${escapeHTML(p.id)}">ลบ</button></div>`).join(''):'<p class="notice">ยังไม่มีสินค้า / No products</p>';
-document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{
+$("adminProducts").innerHTML=products.length?products.map(p=>`
+<div class="item">
+<div class="details">
+<strong>${escapeHTML(p.name)}</strong>
+<small>${money(p.price)} / ${escapeHTML(p.unit||"ชิ้น")}</small>
+${p.category==="tape"?colorHTML(p.color):""}
+</div>
+<button data-edit="${escapeHTML(p.id)}">แก้ไข</button>
+<button class="secondary" data-delete="${escapeHTML(p.id)}">ลบ</button>
+</div>`).join(""):'<p class="notice">ยังไม่มีสินค้า / No products</p>';
+
+document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{
 const p=products.find(x=>x.id===b.dataset.edit);
 if(!p)return;
-for(const k of ['category','name','price','unit','color'])$(k).value=p[k]??'';
-$('editId').value=p.id;
-window.scrollTo({top:0,behavior:'smooth'});
+for(const k of ["category","name","price","unit","color"]){
+$(k).value=p[k]??"";
+}
+$("editId").value=p.id;
+toggleColorField();
+window.scrollTo({top:0,behavior:"smooth"});
 });
-document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{
-if(!validAdmin(auth?.currentUser)||!confirm('ยืนยันลบสินค้านี้?'))return;
+
+document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=async()=>{
+if(!validAdmin(auth?.currentUser)||!confirm("ยืนยันลบสินค้านี้?"))return;
 try{
-await deleteDoc(doc(db,'products',b.dataset.delete));
+await deleteDoc(doc(db,"products",b.dataset.delete));
 }catch(e){
 adminMessage(e.message);
 }
 });
 }
 
-$('loginForm').onsubmit=async e=>{
+$("loginForm").onsubmit=async e=>{
 e.preventDefault();
-if(!auth)return adminMessage('ยังไม่ได้ตั้งค่า Firebase');
+if(!auth)return adminMessage("ยังไม่ได้ตั้งค่า Firebase");
 try{
-await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value);
+await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);
 }catch(e){
-adminMessage('เข้าสู่ระบบไม่สำเร็จ: '+e.message);
+adminMessage("เข้าสู่ระบบไม่สำเร็จ: "+e.message);
 }
 };
-$('logout').onclick=()=>signOut(auth);
 
-$('productForm').onsubmit=async e=>{
+$("logout").onclick=()=>signOut(auth);
+
+$("productForm").onsubmit=async e=>{
 e.preventDefault();
-if(!validAdmin(auth?.currentUser))return adminMessage('ไม่มีสิทธิ์จัดการสินค้า');
-const price=Number($('price').value);
+if(!validAdmin(auth?.currentUser))return adminMessage("ไม่มีสิทธิ์จัดการสินค้า");
+
+const price=Number($("price").value);
 if(!Number.isFinite(price)||price<0)return;
+
 const payload={
-category:$('category').value,
-name:$('name').value.trim(),
+category:$("category").value,
+name:$("name").value.trim(),
 price,
-unit:$('unit').value.trim(),
-color:$('category').value==='tape'?$('color').value:'',
+unit:$("unit").value.trim(),
+color:$("category").value==="tape"?$("color").value:"",
 updatedAt:serverTimestamp()
 };
+
 if(!payload.name||!payload.unit)return;
+
 try{
-const id=$('editId').value;
-if(id)await updateDoc(doc(db,'products',id),payload);
-else await addDoc(collection(db,'products'),payload);
+const id=$("editId").value;
+if(id)await updateDoc(doc(db,"products",id),payload);
+else await addDoc(collection(db,"products"),payload);
 resetForm();
-adminMessage('บันทึกสินค้าเรียบร้อย');
+adminMessage("บันทึกสินค้าเรียบร้อย");
 }catch(e){
-adminMessage('บันทึกไม่สำเร็จ: '+e.message);
+adminMessage("บันทึกไม่สำเร็จ: "+e.message);
 }
 };
 
-$('search').oninput=renderProducts;
+$("search").oninput=renderProducts;
 renderCategories();
 renderProducts();
 renderCart();
@@ -449,26 +539,31 @@ try{
 const app=initializeApp(firebaseConfig);
 db=getFirestore(app);
 auth=getAuth(app);
-onSnapshot(collection(db,'products'),snapshot=>{
+
+onSnapshot(collection(db,"products"),snapshot=>{
 products=snapshot.docs.map(d=>({id:d.id,...d.data()}))
 .filter(p=>p.name&&Number.isFinite(Number(p.price)))
-.map(p=>({...p,price:Number(p.price),category:p.category||'box',unit:p.unit||'ชิ้น'}));
-$('status').textContent=`● เชื่อมต่อแล้ว / Live · ${products.length} รายการ`;
+.map(p=>({...p,price:Number(p.price),category:p.category||"box",unit:p.unit||"ชิ้น"}));
+
+$("status").textContent=`● เชื่อมต่อแล้ว / Live · ${products.length} รายการ`;
 renderProducts();
 renderCart();
 renderAdmin();
-},e=>$('status').textContent='เชื่อมต่อข้อมูลไม่ได้: '+e.message);
+},e=>{
+$("status").textContent="เชื่อมต่อข้อมูลไม่ได้: "+e.message;
+});
+
 onAuthStateChanged(auth,u=>{
 const ok=validAdmin(u);
-$('loginPanel').classList.toggle('hidden',ok);
-$('editorPanel').classList.toggle('hidden',!ok);
+$("loginPanel").classList.toggle("hidden",ok);
+$("editorPanel").classList.toggle("hidden",!ok);
 if(u&&!ok){
-adminMessage('บัญชีไม่ได้รับอนุญาตหรือยังไม่ยืนยันอีเมล');
+adminMessage("บัญชีไม่ได้รับอนุญาตหรือยังไม่ยืนยันอีเมล");
 signOut(auth);
 }
 });
 }catch(e){
-$('status').textContent='Firebase Error: '+e.message;
+$("status").textContent="Firebase Error: "+e.message;
 }
 </script>
 </body>
