@@ -1,1 +1,89 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#166534"><link rel="manifest" href="manifest.webmanifest"><title>Titan Packaging | คำนวณราคากล่อง</title><style>body{font-family:system-ui,sans-serif;background:#f1f5f3;color:#17352a;margin:0}header{background:#166534;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.panel{background:white;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #0001}input,button{font:inherit;padding:10px;border:1px solid #cbd5d1;border-radius:8px}button{background:#166534;color:white;cursor:pointer}button.secondary{background:#e6f1e9;color:#14532d}.line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.line input[type=number]{width:85px}.item{border-bottom:1px solid #eee;padding:12px 0}small{color:#64748b}#error{color:#b91c1c}h1{margin:0}#adminPanel{display:none}</style></head><body><header><h1>📦 Titan Packaging</h1><div>คำนวณราคากล่องพัสดุ</div></header><main><section class="panel"><div class="line"><input id="search" placeholder="ค้นหาชื่อสินค้า / ขนาด" aria-label="ค้นหาสินค้า"><button class="secondary" id="login">เข้าสู่ระบบผู้ดูแล</button><button class="secondary" id="logout" hidden>ออกจากระบบ</button></div><small id="status">กำลังเชื่อมต่อฐานข้อมูล...</small><p id="error" role="alert"></p></section><section class="panel"><h2>รายการสินค้า</h2><div id="products"></div></section><section class="panel"><h2>รายการคำนวณ</h2><div id="cart"></div><h2 id="total">รวม 0.00 บาท</h2><button class="secondary" id="clear">ล้างรายการ</button></section><section class="panel" id="adminPanel"><h2>จัดการสินค้า (ผู้ดูแล)</h2><form id="productForm"><input id="productId" type="hidden"><div class="line"><input id="name" required placeholder="ชื่อ / ขนาดกล่อง"><input id="price" type="number" min="0" step="0.01" required placeholder="ราคา (บาท)"><button type="submit">บันทึกสินค้า</button><button type="button" class="secondary" id="cancel">ยกเลิก</button></div></form></section></main><script type="module" src="app.js"></script></body></html>
+<!doctype html><html lang="th"
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #f3f7f4;
+  color: #18382b;
+  font-size: 15px;
+  margin: 0;
+}
+* { box-sizing: border-box; }
+header {
+  background: linear-gradient(135deg,#103e2a,#176c45);
+  color: white;
+  padding: 22px 18px 28px;
+}
+header h1 {
+  font-size: 28px;
+  line-height: 1.25;
+  margin: 0 0 8px;
+}
+header p {
+  font-size: 15px;
+  margin: 0;
+}
+main {
+  max-width: 1000px;
+  margin: auto;
+  padding: 14px;
+}
+.panel {
+  background: white;
+  padding: 18px;
+  border-radius: 18px;
+  margin: 12px 0;
+  box-shadow: 0 4px 20px #123d6610;
+}
+h2 {
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+input {
+  max-width: 100%;
+  padding: 12px;
+  border: 1px solid #cfdfd3;
+  border-radius: 11px;
+  font-size: 15px;
+}
+#search { width: 100%; }
+button {
+  background: #17623f;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 11px;
+}
+button.secondary {
+  background: #e9f2eb;
+  color: #24533a;
+}
+.item {
+  padding: 15px 0;
+  border-bottom: 1px solid #e4ece6;
+  font-size: 15px;
+}
+.item strong { font-size: 16px; }
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+#total {
+  font-size: 25px;
+  font-weight: 800;
+  color: #14633e;
+}
+#status {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  main { padding: 12px; }
+  .panel { padding: 16px; }
+  button { font-size: 14px; }
+}
+</style>
+><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#166534"><link rel="manifest" href="manifest.webmanifest"><title>Titan Packaging | คำนวณราคากล่อง</title><style>body{font-family:system-ui,sans-serif;background:#f1f5f3;color:#17352a;margin:0}header{background:#166534;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.panel{background:white;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #0001}input,button{font:inherit;padding:10px;border:1px solid #cbd5d1;border-radius:8px}button{background:#166534;color:white;cursor:pointer}button.secondary{background:#e6f1e9;color:#14532d}.line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.line input[type=number]{width:85px}.item{border-bottom:1px solid #eee;padding:12px 0}small{color:#64748b}#error{color:#b91c1c}h1{margin:0}#adminPanel{display:none}</style></head><body><header><h1>📦 Titan Packaging</h1><div>คำนวณราคากล่องพัสดุ</div></header><main><section class="panel"><div class="line"><input id="search" placeholder="ค้นหาชื่อสินค้า / ขนาด" aria-label="ค้นหาสินค้า"><button class="secondary" id="login">เข้าสู่ระบบผู้ดูแล</button><button class="secondary" id="logout" hidden>ออกจากระบบ</button></div><small id="status">กำลังเชื่อมต่อฐานข้อมูล...</small><p id="error" role="alert"></p></section><section class="panel"><h2>รายการสินค้า</h2><div id="products"></div></section><section class="panel"><h2>รายการคำนวณ</h2><div id="cart"></div><h2 id="total">รวม 0.00 บาท</h2><button class="secondary" id="clear">ล้างรายการ</button></section><section class="panel" id="adminPanel"><h2>จัดการสินค้า (ผู้ดูแล)</h2><form id="productForm"><input id="productId" type="hidden"><div class="line"><input id="name" required placeholder="ชื่อ / ขนาดกล่อง"><input id="price" type="number" min="0" step="0.01" required placeholder="ราคา (บาท)"><button type="submit">บันทึกสินค้า</button><button type="button" class="secondary" id="cancel">ยกเลิก</button></div></form></section></main><script type="module" src="app.js"></script></body></html>
