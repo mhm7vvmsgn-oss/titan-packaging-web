@@ -283,7 +283,7 @@ const productCollection=p=>
 p.pricing==="special"?"specialProducts":"products";
 
 const validAdmin=u=>
-!!u&&u.email===ADMIN&&u.emailVerified;
+!!u&&u.email===ADMIN;
 
 const canView=p=>
 p.pricing!=="special"||
