@@ -118,8 +118,9 @@ nav button.active{background:white;color:#166534}
 <div id="loginPanel" class="panel">
 <h2>เข้าสู่ระบบผู้ดูแล<small>Admin Login</small></h2>
 <form id="loginForm">
-<label>อีเมล / Email</label>
-<input id="email" type="email" required>
+<label>ไอดีผู้ดูแล / Admin ID</label>
+<input id="adminId" type="text" required
+autocomplete="username">
 <label>รหัสผ่าน / Password</label>
 <input id="password" type="password" required>
 <button type="submit">เข้าสู่ระบบ / Sign In</button>
@@ -903,7 +904,7 @@ if(!auth)return adminMessage("ยังไม่ได้ตั้งค่า F
 try{
 await signInWithEmailAndPassword(
 auth,
-$("email").value.trim(),
+$("adminId").value.trim().toLowerCase()==="titan" ? ADMIN : "",
 $("password").value
 );
 }catch(e){
