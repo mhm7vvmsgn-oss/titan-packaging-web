@@ -804,7 +804,7 @@ alert("บันทึกรูปไม่สำเร็จ / Save failed: "+e
 };
 
 function resetForm(){
-$("productForm").reset();
+HTMLFormElement.prototype.reset.call($("productForm"));
 $("editId").value="";
 $("category").disabled=false;
 toggleColorField();
