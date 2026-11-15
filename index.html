@@ -1074,7 +1074,192 @@ signOut(auth);
 });
 }catch(e){
 $("status").textContent="Firebase Error: "+e.message;
+}// === เรียงสินค้าและแยกหมวดแก้ไข ===
+{
+  const categoryOptions = cats.filter(c => c[0] !== "special");
+  const nameSorter = new Intl.Collator("th", {
+    numeric: true,
+    sensitivity: "base"
+  });
+
+  let selectedAdminCategory = "box";
+
+  // เมนูเรียงสินค้าในหน้าลูกค้า
+  if (!$("productSort")) {
+    const label = document.createElement("label");
+    label.htmlFor = "productSort";
+    label.textContent = "เรียงสินค้า / Sort Products";
+
+    const select = document.createElement("select");
+    select.id = "productSort";
+    select.innerHTML = `
+      <option value="name">
+        ชื่อสินค้า ก–ฮ / A–Z
+      </option>
+      <option value="price">
+        ราคาน้อยไปมาก / Price: Low to High
+      </option>
+    `;
+
+    $("search").after(label, select);
+  }
+
+  const originalRenderProducts = renderProducts;
+
+  renderProducts = function () {
+    originalRenderProducts();
+
+    const container = $("products");
+    const rows = Array.from(container.children).filter(
+      row => row.querySelector("[data-add]")
+    );
+
+    rows.sort((rowA, rowB) => {
+      const a = products.find(
+        p => p.id === rowA.querySelector("[data-add]").dataset.add
+      );
+      const b = products.find(
+        p => p.id === rowB.querySelector("[data-add]").dataset.add
+      );
+
+      if (!a || !b) return 0;
+
+      const byName = nameSorter.compare(
+        String(a.name),
+        String(b.name)
+      );
+
+      return $("productSort").value === "price"
+        ? Number(a.price) - Number(b.price) || byName
+        : byName;
+    });
+
+    rows.forEach(row => container.append(row));
+  };
+
+  $("productSort").onchange = () => renderProducts();
+  $("search").oninput = () => renderProducts();
+
+  // ปุ่มเลือกหมวดในหน้าผู้ดูแล
+  let categoryMenu = $("adminCategories");
+
+  if (!categoryMenu) {
+    const panel = document.createElement("div");
+    panel.className = "panel";
+
+    const heading = document.createElement("h2");
+    heading.innerHTML = `
+      เลือกหมวดที่ต้องการแก้ไข
+      <small>Select Category to Edit</small>
+    `;
+
+    categoryMenu = document.createElement("div");
+    categoryMenu.id = "adminCategories";
+    categoryMenu.className = "categories";
+
+    panel.append(heading, categoryMenu);
+    $("editorPanel").prepend(panel);
+  }
+
+  function drawAdminCategoryMenu() {
+    categoryMenu.innerHTML = categoryOptions.map(c => `
+      <button
+        type="button"
+        class="category ${
+          selectedAdminCategory === c[0] ? "active" : ""
+        }"
+        data-edit-category="${c[0]}"
+        aria-pressed="${selectedAdminCategory === c[0]}">
+        <span>${c[1]}</span>
+        ${c[2]}
+        <small>${c[3]}</small>
+      </button>
+    `).join("");
+
+    categoryMenu.querySelectorAll(
+      "[data-edit-category]"
+    ).forEach(button => {
+      button.onclick = () => {
+        selectedAdminCategory = button.dataset.editCategory;
+        resetForm();
+        adminMessage("");
+        renderAdmin();
+      };
+    });
+  }
+
+  // ล้างฟอร์มแล้วคงหมวดที่เลือกไว้
+  const originalResetForm = resetForm;
+
+  resetForm = function () {
+    originalResetForm();
+    $("category").value = selectedAdminCategory;
+    $("category").disabled = true;
+    toggleColorField();
+  };
+
+  $("reset").onclick = () => resetForm();
+
+  const originalRenderAdmin = renderAdmin;
+
+  renderAdmin = function () {
+    originalRenderAdmin();
+    drawAdminCategoryMenu();
+
+    if (!validAdmin(auth?.currentUser)) return;
+
+    $("category").disabled = true;
+
+    const container = $("adminProducts");
+    const rows = Array.from(container.children);
+    const matchingRows = [];
+
+    rows.forEach(row => {
+      const editButton = row.querySelector("[data-edit]");
+
+      if (!editButton) {
+        row.remove();
+        return;
+      }
+
+      const product = products.find(
+        p => p.id === editButton.dataset.edit
+      );
+
+      if (
+        !product ||
+        product.category !== selectedAdminCategory
+      ) {
+        row.remove();
+        return;
+      }
+
+      matchingRows.push({ row, product });
+    });
+
+    matchingRows.sort((a, b) =>
+      nameSorter.compare(
+        String(a.product.name),
+        String(b.product.name)
+      )
+    );
+
+    matchingRows.forEach(item => container.append(item.row));
+
+    if (!matchingRows.length) {
+      const message = document.createElement("p");
+      message.className = "notice";
+      message.textContent =
+        "ยังไม่มีสินค้าในหมวดนี้ / No products in this category";
+      container.append(message);
+    }
+  };
+
+  resetForm();
+  renderProducts();
+  renderAdmin();
 }
+// === จบส่วนเรียงสินค้าและแยกหมวดแก้ไข ===
 </script>
 </body>
 </html>
