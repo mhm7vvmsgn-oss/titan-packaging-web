@@ -1675,7 +1675,9 @@ const manageSpecial = document.getElementById("manageSpecial");
 
 if (panel && manageSpecial) {
   const area = document.createElement("div");
-  area.hidden = true;
+  
+area.style.display = "none";
+
   area.style.marginTop = "14px";
 
   const button = document.createElement("button");
