@@ -1356,5 +1356,126 @@ $("status").textContent="Firebase Error: "+e.message;
 })();
 </script>
 
+<style>
+#titan-sales-extra {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #ddd;
+}
+#titan-sales-dialog .titan-pay-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  margin: 8px 0;
+  background: #f5f7fa;
+  border-radius: 10px;
+}
+#titan-sales-dialog input[type="radio"] {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  accent-color: #dc2626;
+}
+#titan-qr-area {
+  text-align: center;
+  padding: 12px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+#titan-qr-area img {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  margin: 12px auto;
+}
+</style>
+
+<script>
+(() => {
+  const dialog = document.getElementById(
+    "titan-sales-dialog"
+  );
+
+  const extra = document.createElement("div");
+  extra.id = "titan-sales-extra";
+  extra.hidden = true;
+
+  extra.innerHTML = `
+    <h3>เลือกวิธีชำระเงิน</h3>
+
+    <label class="titan-pay-option">
+      <input type="radio"
+             name="titan-payment"
+             value="cash" checked>
+      💵 เงินสด
+    </label>
+
+    <label class="titan-pay-option">
+      <input type="radio"
+             name="titan-payment"
+             value="transfer">
+      📱 เงินโอน / QR พร้อมเพย์
+    </label>
+
+    <div id="titan-qr-area" hidden>
+      <h3>สแกนเพื่อชำระเงิน</h3>
+      <img src="./titan-payment-qr.jpg"
+           alt="QR พร้อมเพย์ของร้าน">
+      <p>ลูกค้ากรอกยอดเงินเอง</p>
+      <p>กรุณาตรวจสอบเงินเข้าก่อนบันทึก</p>
+    </div>
+  `;
+
+  dialog.appendChild(extra);
+
+  const qrArea = document.getElementById(
+    "titan-qr-area"
+  );
+
+  const cash = extra.querySelector(
+    'input[value="cash"]'
+  );
+
+  const transfer = extra.querySelector(
+    'input[value="transfer"]'
+  );
+
+  cash.addEventListener("change", () => {
+    qrArea.hidden = true;
+  });
+
+  transfer.addEventListener("change", () => {
+    qrArea.hidden = false;
+  });
+
+  document.getElementById(
+    "titan-sales-login"
+  ).addEventListener("click", () => {
+    const pin = document.getElementById(
+      "titan-sales-pin"
+    ).value;
+
+    extra.hidden = pin !== "1234";
+
+    if (pin === "1234") {
+      document.getElementById(
+        "titan-sales-message"
+      ).textContent = "ปลดล็อกแล้ว";
+    }
+  });
+
+  document.getElementById(
+    "titan-sales-button"
+  ).addEventListener("click", () => {
+    extra.hidden = true;
+    cash.checked = true;
+    qrArea.hidden = true;
+  });
+})();
+</script>
+
 </body>
 </html>
