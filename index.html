@@ -1261,5 +1261,100 @@ $("status").textContent="Firebase Error: "+e.message;
 }
 // === จบส่วนเรียงสินค้าและแยกหมวดแก้ไข ===
 </script>
+  
+<style>
+#titan-sales-button {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  z-index: 9998;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px #0002;
+  cursor: pointer;
+}
+#titan-sales-dialog {
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+  width: min(90vw, 380px);
+  background: white;
+  color: #222;
+}
+#titan-sales-dialog::backdrop {
+  background: #0008;
+}
+#titan-sales-dialog input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  margin: 12px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+</style>
+
+<button id="titan-sales-button"
+        type="button">
+  🔴 บันทึกรายการขาย
+</button>
+
+<dialog id="titan-sales-dialog">
+  <h3>บันทึกรายการขาย</h3>
+  <p>กรุณาใส่ PIN ผู้ดูแลระบบ</p>
+  <input id="titan-sales-pin"
+         type="password"
+         inputmode="numeric"
+         maxlength="4"
+         placeholder="PIN 4 หลัก">
+  <p id="titan-sales-message"></p>
+  <button id="titan-sales-login"
+          type="button">เข้าสู่ระบบ</button>
+  <button id="titan-sales-close"
+          type="button">ปิด</button>
+</dialog>
+
+<script>
+(() => {
+  const dialog = document.getElementById(
+    "titan-sales-dialog"
+  );
+  const pin = document.getElementById(
+    "titan-sales-pin"
+  );
+  const message = document.getElementById(
+    "titan-sales-message"
+  );
+
+  document.getElementById(
+    "titan-sales-button"
+  ).onclick = () => {
+    pin.value = "";
+    message.textContent = "";
+    dialog.showModal();
+  };
+
+  document.getElementById(
+    "titan-sales-close"
+  ).onclick = () => dialog.close();
+
+  document.getElementById(
+    "titan-sales-login"
+  ).onclick = () => {
+    if (pin.value === "1234") {
+      message.textContent =
+        "ปลดล็อกแล้ว — รอเพิ่มหน้าบันทึกยอดขาย";
+    } else {
+      message.textContent = "PIN ไม่ถูกต้อง";
+    }
+  };
+})();
+</script>
+
 </body>
 </html>
