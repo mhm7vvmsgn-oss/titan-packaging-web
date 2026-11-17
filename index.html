@@ -780,6 +780,24 @@ ctx.textAlign="right";
 ctx.fillText(money(total),width-pad-18,bottom+38);
 ctx.textAlign="left";
 
+const payMethod = document.querySelector(
+  'input[name="titan-checkout-method"]:checked'
+)?.value;
+
+const payText = payMethod === "transfer"
+  ? "เงินโอน / Bank Transfer"
+  : payMethod === "cash"
+    ? "เงินสด / Cash"
+    : "ไม่ระบุ / Not selected";
+
+ctx.fillStyle = "#334155";
+ctx.font = "bold 21px system-ui,sans-serif";
+ctx.textAlign = "left";
+ctx.fillText(
+  "วิธีชำระเงิน / Payment: " + payText,
+  pad + 18, bottom + 98
+);
+
 const blob=await new Promise(resolve=>
 canvas.toBlob(resolve,"image/jpeg",0.94)
 );
