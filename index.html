@@ -1623,5 +1623,176 @@ document.querySelector("#titan-sales-dialog p:not([id])").hidden = false;
 })();
 </script>
 
+<!-- นำเข้ากล่องราคาพิเศษ Titan Packaging 35 รายการ -->
+<script type="module">
+import { getApps } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+  getFirestore, collection, getDocs,
+  writeBatch, doc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const specialBoxRows = [
+  ["00 ไม่พิมพ์", 0.84],
+  ["00", 0.90],
+  ["0", 1.12],
+  ["0+4", 1.37],
+  ["A", 1.60],
+  ["AA", 1.45],
+  ["2A", 2.09],
+  ["AB", 1.87],
+  ["B", 2.51],
+  ["B+7", 3.41],
+  ["2B", 3.41],
+  ["C", 3.53],
+  ["CD", 2.39],
+  ["D", 4.70],
+  ["D-7", 4.42],
+  ["D+11", 6.73],
+  ["2D", 6.97],
+  ["E", 6.19],
+  ["F เล็ก", 7.40],
+  ["F กลาง", 9.70],
+  ["F ใหญ่", 12.77],
+  ["G", 9.46],
+  ["H", 15.64],
+  ["7", 14.67],
+  ["C+8", 4.67],
+  ["C+9", 4.90],
+  ["M", 7.90],
+  ["M+", 11.61],
+  ["L", 15.40],
+  ["2C", 5.07],
+  ["Q", 2.09],
+  ["T2", 4.46],
+  ["I", 20.68],
+  ["P1", 9.26],
+  ["P2", 14.05]
+];
+
+const panel = document.querySelector("#editorPanel > .panel");
+const manageSpecial = document.getElementById("manageSpecial");
+
+if (panel && manageSpecial) {
+  const area = document.createElement("div");
+  area.hidden = true;
+  area.style.marginTop = "14px";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.id = "importSpecialBox35";
+  button.textContent = "📥 เพิ่มกล่องราคาพิเศษ 35 รายการ";
+  button.style.width = "100%";
+
+  const message = document.createElement("p");
+  message.className = "notice";
+  message.setAttribute("role", "status");
+  message.textContent =
+    "นำเข้าเฉพาะรายการที่ยังไม่มี ไม่เปลี่ยนราคาสินค้าเดิม";
+
+  area.append(button, message);
+  panel.append(area);
+
+  const auth = getApps().length ? getAuth() : null;
+  const db = getApps().length ? getFirestore() : null;
+  let adminUser = null;
+
+  function refreshButton() {
+    area.hidden = !(
+      adminUser &&
+      adminUser.email === "mr.surasak.kitisak@gmail.com" &&
+      adminUser.emailVerified === true &&
+      manageSpecial.classList.contains("active")
+    );
+  }
+
+  if (auth && db) {
+    onAuthStateChanged(auth, user => {
+      adminUser = user;
+      refreshButton();
+    });
+
+    new MutationObserver(refreshButton).observe(manageSpecial, {
+      attributes: true,
+      attributeFilter: ["class"]
+    });
+
+    button.addEventListener("click", async () => {
+      if (
+        !adminUser ||
+        !adminUser.emailVerified ||
+        adminUser.email !== "mr.surasak.kitisak@gmail.com"
+      ) return;
+
+      button.disabled = true;
+      message.textContent = "กำลังตรวจรายการในฐานข้อมูล...";
+
+      try {
+        const items = collection(db, "specialProducts");
+        const snapshot = await getDocs(items);
+
+        const existingNames = new Set(
+          snapshot.docs
+            .filter(d => d.data().category === "box")
+            .map(d => String(d.data().name || "").trim())
+        );
+
+        const toAdd = specialBoxRows.filter(
+          ([name]) => !existingNames.has(name)
+        );
+
+        if (toAdd.length === 0) {
+          message.textContent =
+            "มีครบทั้ง 35 รายการแล้ว ไม่ได้เพิ่มรายการซ้ำ";
+          return;
+        }
+
+        if (!confirm(
+          "เพิ่มกล่องราคาพิเศษ " + toAdd.length +
+          " รายการลง Firebase ใช่หรือไม่?"
+        )) {
+          message.textContent = "ยกเลิกการนำเข้าแล้ว";
+          return;
+        }
+
+        const batch = writeBatch(db);
+
+        for (const [name, price] of toAdd) {
+          batch.set(doc(items), {
+            category: "box",
+            name: name,
+            price: price,
+            unit: "ใบ",
+            color: "",
+            updatedAt: serverTimestamp()
+          });
+        }
+
+        await batch.commit();
+
+        message.textContent =
+          "สำเร็จ! เพิ่ม " + toAdd.length +
+          " รายการในสินค้าราคาพิเศษ → กล่อง";
+        alert(message.textContent);
+
+      } catch (error) {
+        message.textContent =
+          "นำเข้าไม่สำเร็จ: " + error.message;
+        alert(message.textContent);
+
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+  } else {
+    message.textContent =
+      "ไม่พบการเชื่อมต่อ Firebase กรุณาโหลดหน้าใหม่";
+    area.hidden = false;
+    button.disabled = true;
+  }
+}
+</script>
+
 </body>
 </html>
