@@ -1336,6 +1336,11 @@ $("status").textContent="Firebase Error: "+e.message;
   ).onclick = () => {
     pin.value = "";
     message.textContent = "";
+    
+pin.hidden = false;
+document.getElementById("titan-sales-login").hidden = false;
+document.querySelector("#titan-sales-dialog p:not([id])").hidden = false;
+
     dialog.showModal();
   };
 
@@ -1347,8 +1352,13 @@ $("status").textContent="Firebase Error: "+e.message;
     "titan-sales-login"
   ).onclick = () => {
     if (pin.value === "1234") {
-      message.textContent =
-        "ปลดล็อกแล้ว — รอเพิ่มหน้าบันทึกยอดขาย";
+  message.textContent = "ปลดล็อกแล้ว";
+  pin.hidden = true;
+  document.getElementById("titan-sales-login").hidden = true;
+  document.querySelector(
+    '#titan-sales-dialog p:not([id])'
+  ).hidden = true;
+
     } else {
       message.textContent = "PIN ไม่ถูกต้อง";
     }
