@@ -1487,5 +1487,112 @@ document.querySelector("#titan-sales-dialog p:not([id])").hidden = false;
 })();
 </script>
 
+<!-- Titan Packaging: ระบบเลือกชำระเงินแทน PIN เดิม -->
+<style>
+  #titan-checkout {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f0f7f2;
+    border: 1px solid #d6e8da;
+    border-radius: 12px;
+  }
+  #titan-checkout h3 { margin: 0 0 12px; }
+  #titan-checkout label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    margin: 8px 0;
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  #titan-checkout input[type="radio"] {
+    width: auto;
+    margin: 0;
+    accent-color: #166534;
+  }
+  #titan-new-qr {
+    text-align: center;
+    padding: 12px 0;
+  }
+  #titan-new-qr img {
+    display: block;
+    width: 100%;
+    max-width: 260px;
+    height: auto;
+    margin: 10px auto;
+  }
+</style>
+
+<script>
+(() => {
+  // ลบปุ่มบันทึกการขายและหน้าต่าง PIN เดิม
+  document.getElementById('titan-sales-button')?.remove();
+  document.getElementById('titan-sales-dialog')?.remove();
+
+  // เพิ่มวิธีชำระเงินใต้ยอดรวม
+  const total = document.getElementById('total');
+  const totalBox = total?.closest('.total');
+  if (!totalBox || document.getElementById('titan-checkout')) return;
+
+  const checkout = document.createElement('div');
+  checkout.id = 'titan-checkout';
+  checkout.innerHTML = `
+    <h3>วิธีชำระเงิน <small>Payment Method</small></h3>
+
+    <label>
+      <input type="radio"
+             name="titan-checkout-method"
+             value="cash" checked>
+      💵 เงินสด / Cash
+    </label>
+
+    <label>
+      <input type="radio"
+             name="titan-checkout-method"
+             value="transfer">
+      📱 เงินโอน / Bank Transfer
+    </label>
+
+    <div id="titan-new-qr" hidden>
+      <p><strong>สแกน QR เพื่อโอนเงิน</strong></p>
+      <img src="./titan-payment-qr.jpg"
+           alt="QR ชำระเงินของร้าน">
+      <p id="titan-checkout-amount"></p>
+      <p>กรุณาตรวจสอบยอดเงินเข้าบัญชีก่อนส่งสินค้า</p>
+    </div>
+  `;
+
+  totalBox.insertAdjacentElement('afterend', checkout);
+
+  const qr = checkout.querySelector('#titan-new-qr');
+  const amount = checkout.querySelector('#titan-checkout-amount');
+
+  const refresh = () => {
+    qr.hidden = !checkout.querySelector(
+      'input[value="transfer"]'
+    ).checked;
+
+    amount.textContent =
+      'ยอดที่ต้องชำระ: ' + total.textContent.trim();
+  };
+
+  checkout.querySelectorAll(
+    'input[name="titan-checkout-method"]'
+  ).forEach(input =>
+    input.addEventListener('change', refresh)
+  );
+
+  new MutationObserver(refresh).observe(total, {
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+
+  refresh();
+})();
+</script>
+
 </body>
 </html>
