@@ -701,145 +701,360 @@ cart={};
 renderCart();
 };
 
-$("download").onclick=async()=>{
-const rows=entries();
-if(!rows.length)return;
+$("download").onclick = async () => {
+  const items = entries();
+  if (!items.length) {
+    return alert("กรุณาเพิ่มสินค้าในตะกร้าก่อน");
+  }
 
-try{
-const width=1000;
-const pad=58;
-const rowH=100;
-const height=400+rows.length*rowH;
+  try {
+    const W = 1080;
+    const rowH = 112;
+    const tableTop = 470;
+    const tableBottom = tableTop + 80 + items.length * rowH;
+    const totalTop = tableBottom + 38;
+    const payTop = totalTop + 155;
+    const H = Math.max(1440, payTop + 285);
 
-const canvas=document.createElement("canvas");
-canvas.width=width*2;
-canvas.height=height*2;
+    const canvas = document.createElement("canvas");
+    const scale = H > 3500 ? 1 : 2;
+    canvas.width = W * scale;
+    canvas.height = H * scale;
 
-const ctx=canvas.getContext("2d");
-ctx.scale(2,2);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("ไม่รองรับการสร้างภาพ");
+    ctx.scale(scale, scale);
 
-ctx.fillStyle="#ffffff";
-ctx.fillRect(0,0,width,height);
-ctx.fillStyle="#166534";
-ctx.fillRect(0,0,width,130);
-ctx.fillStyle="#ffffff";
-ctx.font="bold 40px system-ui,sans-serif";
-ctx.fillText("TITAN PACKAGING",pad,62);
-ctx.font="22px system-ui,sans-serif";
-ctx.fillText("Packaging Price Summary",pad,99);
+    const green = "#07652d";
+    const orange = "#ff7900";
+    const dark = "#163a29";
 
-ctx.fillStyle="#334155";
-ctx.font="22px system-ui,sans-serif";
-ctx.fillText(
-"วันที่ / Date: "+new Date().toLocaleString("th-TH"),
-pad,174
-);
+    const moneyTH = n => Number(n).toLocaleString("th-TH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
 
-ctx.fillStyle="#166534";
-ctx.font="bold 22px system-ui,sans-serif";
-ctx.fillText("รายการสินค้า / Items",pad,220);
-ctx.fillText("จำนวน",625,220);
-ctx.fillText("รวม / Amount",785,220);
+    function rect(x, y, w, h, radius, fill, stroke) {
+      const r = Math.min(radius, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
 
-let total=0;
-ctx.textBaseline="middle";
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = stroke;
+        ctx.stroke();
+      }
+    }
 
-rows.forEach((e,i)=>{
-const y=265+i*rowH;
+    function text(
+      value, x, y, size = 28,
+      color = dark, weight = 600, align = "left"
+    ) {
+      ctx.font = `${weight} ${size}px system-ui, sans-serif`;
+      ctx.textAlign = align;
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = color;
+      ctx.fillText(String(value), x, y);
+      ctx.textAlign = "left";
+    }
 
-ctx.strokeStyle="#e2e8f0";
-ctx.beginPath();
-ctx.moveTo(pad,y+62);
-ctx.lineTo(width-pad,y+62);
-ctx.stroke();
+    function shorten(value, maxWidth, fontSize = 28) {
+      let s = String(value);
+      ctx.font = `600 ${fontSize}px system-ui, sans-serif`;
+      if (ctx.measureText(s).width <= maxWidth) return s;
 
-ctx.fillStyle="#173a2a";
-ctx.font="bold 22px system-ui,sans-serif";
+      while (
+        s.length > 1 &&
+        ctx.measureText(s + "…").width > maxWidth
+      ) {
+        s = s.slice(0, -1);
+      }
+      return s + "…";
+    }
 
-const fullName=e.p.name+(e.p.pricing==="special"?" [Special]":"");
-const name=fullName.length>34
-?fullName.slice(0,33)+"…":fullName;
+    // พื้นหลัง
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, H);
 
-ctx.fillText(name,pad,y-20);
-ctx.font="19px system-ui,sans-serif";
-ctx.fillText(
-money(e.p.price)+" / "+(e.p.unit||"ชิ้น"),
-pad,y+10
-);
+    const grad = ctx.createLinearGradient(0, 0, W, 180);
+    grad.addColorStop(0, "#005a29");
+    grad.addColorStop(1, "#228e27");
+    rect(8, 8, 1064, 188, 48, grad);
 
-if(e.p.category==="tape"&&e.p.color){
-const c=colorInfo(e.p.color);
+    // โลโก้ร้าน
+    try {
+      const logo = new Image();
+      logo.src = new URL(
+        "./titan-original-logo.png",
+        location.href
+      ).href;
+      await logo.decode();
+      ctx.drawImage(logo, 58, 29, 146, 146);
+    } catch {
+      text("📦", 80, 104, 84, "#ffffff");
+    }
 
-ctx.beginPath();
-ctx.arc(pad+10,y+37,9,0,Math.PI*2);
-ctx.fillStyle=c?c[2]:"#d1d5db";
-ctx.fill();
-ctx.strokeStyle="#94a3b8";
-ctx.stroke();
+    text("TITAN", 222, 81, 72, "#ffffff", 800);
+    text("PACKAGING", 226, 140, 43, "#ffffff", 750);
 
-ctx.fillStyle="#334155";
-ctx.font="18px system-ui,sans-serif";
-ctx.fillText("สี / Color: "+e.p.color,pad+27,y+37);
-}
+    // หัวข้อ
+    rect(140, 224, 800, 108, 54, green, "#ff9c19");
+    text(
+      "รายการขายหน้าร้าน",
+      540, 280, 57, "#ffffff", 800, "center"
+    );
 
-ctx.fillStyle="#173a2a";
-ctx.font="22px system-ui,sans-serif";
-ctx.fillText(String(e.qty),640,y);
-ctx.fillText(money(e.p.price*e.qty),785,y);
-total+=e.p.price*e.qty;
-});
+    // วันที่และเวลาอัตโนมัติ
+    const now = new Date();
 
-const bottom=280+rows.length*rowH;
+    const date = now.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
 
-ctx.fillStyle="#edf5ef";
-ctx.fillRect(pad,bottom,width-pad*2,74);
-ctx.fillStyle="#166534";
-ctx.font="bold 30px system-ui,sans-serif";
-ctx.fillText("ยอดรวม / Total",pad+18,bottom+38);
+    const time = now.toLocaleTimeString("th-TH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    });
 
-ctx.textAlign="right";
-ctx.fillText(money(total),width-pad-18,bottom+38);
-ctx.textAlign="left";
+    rect(45, 357, 990, 76, 36, "#e7f5eb");
+    text("▣ วันที่ : " + date, 80, 395, 37, green, 700);
 
-const payMethod = document.querySelector(
-  'input[name="titan-checkout-method"]:checked'
-)?.value;
+    ctx.fillStyle = "#8bc59b";
+    ctx.fillRect(620, 370, 3, 50);
 
-const payText = payMethod === "transfer"
-  ? "เงินโอน / Bank Transfer"
-  : payMethod === "cash"
-    ? "เงินสด / Cash"
-    : "ไม่ระบุ / Not selected";
+    text("◷ เวลา " + time + " น.", 650, 395, 34, green, 700);
 
-ctx.fillStyle = "#334155";
-ctx.font = "bold 21px system-ui,sans-serif";
-ctx.textAlign = "left";
-ctx.fillText(
-  "วิธีชำระเงิน / Payment: " + payText,
-  pad + 18, bottom + 98
-);
+    // ตารางสินค้า
+    const xs = [40, 158, 466, 671, 811, 1040];
 
-const blob=await new Promise(resolve=>
-canvas.toBlob(resolve,"image/jpeg",0.94)
-);
+    rect(
+      40, tableTop, 1000,
+      80 + items.length * rowH,
+      22, "#ffffff", green
+    );
 
-if(!blob)throw new Error("ไม่สามารถสร้างรูปได้");
+    rect(40, tableTop, 1000, 80, 20, green);
 
-const filename="Titan-Packaging-"+
-new Date().toISOString().slice(0,10)+".jpg";
+    ctx.fillStyle = green;
+    ctx.fillRect(40, tableTop + 38, 1000, 42);
 
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;
-a.download=filename;
-document.body.append(a);
-a.click();
-a.remove();
+    text("ลำดับ", 99, tableTop + 43,
+      26, "#ffffff", 700, "center");
 
-setTimeout(()=>URL.revokeObjectURL(url),10000);
-}catch(e){
-alert("บันทึกรูปไม่สำเร็จ / Save failed: "+e.message);
-}
+    text("รายการสินค้า", 310, tableTop + 43,
+      28, "#ffffff", 700, "center");
+
+    text("ราคา/หน่วย", 567, tableTop + 30,
+      25, "#ffffff", 700, "center");
+
+    text("(บาท)", 567, tableTop + 62,
+      22, "#ffffff", 500, "center");
+
+    text("จำนวน", 741, tableTop + 43,
+      27, "#ffffff", 700, "center");
+
+    text("ยอดเงิน", 925, tableTop + 30,
+      27, "#ffffff", 700, "center");
+
+    text("(บาท)", 925, tableTop + 62,
+      22, "#ffffff", 500, "center");
+
+    let total = 0;
+
+    items.forEach((e, i) => {
+      const y = tableTop + 80 + i * rowH;
+      const qty = Number(e.qty);
+      const price = Number(e.p.price);
+      const amount = price * qty;
+      total += amount;
+
+      if (i % 2 === 0) {
+        ctx.fillStyle = "#f1faf3";
+        ctx.fillRect(42, y, 996, rowH);
+      }
+
+      ctx.strokeStyle = "#b9d6c1";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(42, y + rowH);
+      ctx.lineTo(1038, y + rowH);
+      ctx.stroke();
+
+      text(i + 1, 99, y + 55,
+        29, dark, 600, "center");
+
+      let name = String(e.p.name || "สินค้า");
+
+      if (e.p.pricing === "special") {
+        name += " [Special]";
+      }
+
+      text(
+        shorten(name, 289, 28),
+        172, y + 42, 28, dark, 700
+      );
+
+      const color = e.color ||
+        (e.p.category === "tape" ? e.p.color : "");
+
+      if (color) {
+        text(
+          shorten("สี: " + color, 280, 21),
+          172, y + 82, 21, "#617669", 500
+        );
+      } else {
+        text(
+          shorten(String(e.p.unit || "ชิ้น"), 270, 20),
+          172, y + 82, 20, "#617669", 500
+        );
+      }
+
+      text(moneyTH(price), 567, y + 55,
+        26, dark, 600, "center");
+
+      text(qty.toLocaleString("th-TH"), 741, y + 41,
+        26, dark, 600, "center");
+
+      text(
+        shorten(String(e.p.unit || "ชิ้น"), 129, 20),
+        741, y + 77, 20, "#64776b", 500, "center"
+      );
+
+      text(moneyTH(amount), 1020, y + 55,
+        29, green, 750, "right");
+    });
+
+    // เส้นแบ่งคอลัมน์
+    ctx.strokeStyle = "#9bceaa";
+    ctx.lineWidth = 2;
+
+    xs.slice(1, -1).forEach(x => {
+      ctx.beginPath();
+      ctx.moveTo(x, tableTop);
+      ctx.lineTo(x, tableBottom);
+      ctx.stroke();
+    });
+
+    // ยอดรวม
+    rect(45, totalTop, 990, 118, 28, green);
+    rect(535, totalTop, 500, 118, 28, orange);
+
+    text(
+      "ยอดรวมทั้งหมด",
+      102, totalTop + 62,
+      41, "#ffffff", 800
+    );
+
+    text(
+      moneyTH(total) + " บาท",
+      1004, totalTop + 62,
+      50, "#ffffff", 800, "right"
+    );
+
+    // วิธีชำระเงิน
+    const selected = document.querySelector(
+      'input[name="titan-checkout-method"]:checked'
+    )?.value;
+
+    const payment = selected === "transfer"
+      ? "เงินโอน"
+      : selected === "cash"
+        ? "เงินสด"
+        : "ไม่ระบุ";
+
+    rect(
+      45, payTop, 990, 125,
+      30, "#ffffff", green
+    );
+
+    text(
+      "วิธีชำระเงิน :",
+      105, payTop + 63,
+      39, dark, 700
+    );
+
+    rect(
+      492, payTop + 27,
+      260, 71, 23, "#dff3e5"
+    );
+
+    text(
+      payment, 622, payTop + 63,
+      43, green, 800, "center"
+    );
+
+    // ตกแต่งส่วนล่าง
+    ctx.fillStyle = green;
+    ctx.beginPath();
+    ctx.moveTo(0, H - 82);
+    ctx.quadraticCurveTo(400, H - 185, 1080, H - 100);
+    ctx.lineTo(1080, H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = orange;
+    ctx.lineWidth = 15;
+    ctx.beginPath();
+    ctx.moveTo(0, H - 135);
+    ctx.quadraticCurveTo(430, H - 100, 1080, H - 153);
+    ctx.stroke();
+
+    text(
+      "ขอบคุณที่ใช้บริการ TITAN PACKAGING",
+      540, H - 35, 25,
+      "#ffffff", 600, "center"
+    );
+
+    // บันทึกภาพ JPG
+    const blob = await new Promise(resolve =>
+      canvas.toBlob(resolve, "image/jpeg", 0.94)
+    );
+
+    if (!blob) {
+      throw new Error("สร้างไฟล์ JPG ไม่สำเร็จ");
+    }
+
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+
+    const stamp =
+      String(now.getHours()).padStart(2, "0") +
+      String(now.getMinutes()).padStart(2, "0");
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download =
+      `Titan-Sales-${yyyy}${mm}${dd}-${stamp}.jpg`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+  } catch (err) {
+    alert("บันทึก JPG ไม่สำเร็จ: " + err.message);
+  }
 };
   
 function updateDeliveryNoteLock() {
