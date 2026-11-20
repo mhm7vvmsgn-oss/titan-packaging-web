@@ -1140,41 +1140,48 @@ tbody tr:last-child{border-bottom:1px solid #087337}
 </div>
 
 <div class="paper">
-  <div class="header">
-    <img class="logo" src="${escapeHTML(logo)}"
-         alt="Titan Packaging">
 
-    <div class="identity">
-      <h1>TITAN PACKAGING</h1>
-      <div class="orange"></div>
-      <div class="customer">
-        <label>👤 ลูกค้า</label>
-        
-<div
-  contenteditable="true"
-  role="textbox"
-  aria-label="ชื่อลูกค้าและที่อยู่"
-  aria-multiline="true"
-  style="
-    flex:1;
-    min-width:0;
-    min-height:32mm;
-    padding:12px;
-    line-height:1.5;
-    white-space:pre-wrap;
-    overflow-wrap:anywhere;
-    outline:none;
-  "
-></div>
+<div class="header">
+  <img class="logo" src="${escapeHTML(logo)}"
+       alt="Titan Packaging">
 
-      </div>
+  <div class="identity">
+    <h1>TITAN PACKAGING</h1>
+    <div class="orange"></div>
+  </div>
+
+  <div class="badge">
+    ใบส่งของ
+    <small>DELIVERY NOTE</small>
+  </div>
+</div>
+
+<div class="recipient-card">
+  <div class="recipient-icon">👤</div>
+
+  <div class="recipient-fields">
+    <div class="recipient-row">
+      <div class="recipient-label">ลูกค้า :</div>
+      <div class="recipient-value"
+           contenteditable="true"
+           role="textbox"
+           aria-label="ชื่อลูกค้า"
+           aria-multiline="true"
+           data-placeholder="พิมพ์ชื่อลูกค้า (2 บรรทัด)"></div>
     </div>
 
-    <div class="badge">
-      ใบส่งของ
-      <small>DELIVERY NOTE</small>
+    <div class="recipient-row">
+      <div class="recipient-label">ที่อยู่ :</div>
+      <div class="recipient-value"
+           contenteditable="true"
+           role="textbox"
+           aria-label="ที่อยู่ลูกค้า"
+           aria-multiline="true"
+           data-placeholder="พิมพ์ที่อยู่ (2 บรรทัด)"></div>
     </div>
   </div>
+</div>
+
 
   <div class="meta">
     <span>
