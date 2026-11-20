@@ -1149,8 +1149,24 @@ tbody tr:last-child{border-bottom:1px solid #087337}
       <div class="orange"></div>
       <div class="customer">
         <label>👤 ลูกค้า</label>
-        <input aria-label="ชื่อลูกค้า"
-               placeholder="กรอกชื่อลูกค้า">
+        
+<div
+  contenteditable="true"
+  role="textbox"
+  aria-label="ชื่อลูกค้าและที่อยู่"
+  aria-multiline="true"
+  style="
+    flex:1;
+    min-width:0;
+    min-height:32mm;
+    padding:12px;
+    line-height:1.5;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+    outline:none;
+  "
+></div>
+
       </div>
     </div>
 
