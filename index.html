@@ -589,6 +589,10 @@ $("cartShortcut").setAttribute(
 
 $("total").textContent=money(sum);
 $("download").disabled=!rows.length;
+  
+$("download").disabled=!rows.length;
+updateDeliveryNoteLock();
+
 }
 
 let toastTimer;
