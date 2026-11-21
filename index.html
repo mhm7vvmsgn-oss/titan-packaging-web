@@ -1922,7 +1922,9 @@ function openDeliveryNote(existing = null) {
     return;
   }
 
-  const lines = entries().map(e => ({
+  $("createDeliveryNote").onclick = () => openDeliveryNote();
+
+function openDeliveryNote(existing = null) {
     name: e.p.name + (e.color ? " (สี" + e.color + ")" : ""),
     qty: Number(e.qty),
     price: Number(e.p.price)
@@ -1944,7 +1946,9 @@ function openDeliveryNote(existing = null) {
     maximumFractionDigits: 2
   });
 
-  const today = new Date().toLocaleDateString("th-TH", {
+  $("createDeliveryNote").onclick = () => openDeliveryNote();
+
+function openDeliveryNote(existing = null) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
@@ -3163,7 +3167,29 @@ tbody tr.blank{
   }).formatToParts(deliveryDate);
   const part = type => dayKey.find(p => p.type === type).value;
   const prefix = part("year") + part("month") + part("day");
+  if (existing) {
+    numberLabel.textContent = "เลขที่เอกสาร / Doc No. " + existing.number;
+    note.title = "ใบส่งสินค้า_" + existing.number;
 
+    for (const [selector, value] of [
+      [".titan-name-line", existing.customer],
+      [".titan-address-lines", existing.address]
+    ]) {
+      const field = note.querySelector(selector);
+      field.textContent = value || "";
+      field.contentEditable = "false";
+    }
+
+    for (const input of note.querySelectorAll('input[name="delivery-pay"]')) {
+      input.checked = input.value === existing.payment;
+      input.tabIndex = -1;
+      input.onclick = event => event.preventDefault();
+    }
+
+    printButton.textContent = "พิมพ์ / บันทึก PDF";
+    printButton.onclick = () => win.print();
+    return;
+  }
   let savedNumber = "";
   printButton.textContent = "บันทึกใบส่งสินค้า / พิมพ์ PDF";
 
