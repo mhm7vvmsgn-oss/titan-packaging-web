@@ -1531,7 +1531,69 @@ tbody tr:last-child{border-bottom:1px solid #087337}
 </body>
 </html>`);
 
-  preview.document.close();
+
+preview.document.close();
+
+const card = preview.document.querySelector(".recipient-card");
+
+if (card) {
+  const fields = card.querySelector(".recipient-fields");
+
+  if (fields) {
+    fields.style.display = "grid";
+    fields.style.gridTemplateColumns = "1.08fr 1fr";
+
+    fields.innerHTML = `
+      <div style="
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:12px;
+        padding:12px 8px;
+        font-size:12px;
+        line-height:1.5;
+        overflow-wrap:anywhere;
+      ">
+        <div>
+          <b>ร้านค้า :</b> อุปกรณ์เเพ็คกิ้งราคาโรงงาน
+          <div>รับ-ส่ง พัสดุ by Titan Packaging</div>
+          <div>@ท่าตำหนัก</div>
+        </div>
+        <div>
+          <b>ติดต่อ :</b> โทร 0612922895
+          <div>( คุณ เเอร์ )</div>
+        </div>
+      </div>
+
+      <div style="
+        display:flex;
+        flex-direction:column;
+        border-left:2px solid #087337;
+        min-width:0;
+        font-size:12px;
+      ">
+        <div style="
+          flex:1;
+          padding:8px;
+          border-bottom:2px solid #087337;
+        ">
+          <b>ลูกค้า :</b>
+          <div class="recipient-value"
+               contenteditable="true"
+               data-placeholder="กรอกชื่อลูกค้า"></div>
+        </div>
+
+        <div style="flex:1;padding:8px;">
+          <b>ที่อยู่ :</b>
+          <div class="recipient-value"
+               contenteditable="true"
+               data-placeholder="กรอกที่อยู่ลูกค้า"></div>
+        </div>
+      </div>
+    `;
+  }
+}
+
 };
 
 updateDeliveryNoteLock();
