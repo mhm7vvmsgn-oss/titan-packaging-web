@@ -2506,7 +2506,21 @@ tbody tr.blank{
   win.document.close();
   
   // ปรับรูปไอคอนและระยะห่างของใบส่งสินค้า
-  const note = win.document;
+  const note = win.document;  const paymentOptions = note.querySelectorAll('input[name="delivery-pay"]');
+
+  for (const option of paymentOptions) {
+    option.type = "checkbox";
+    option.defaultChecked = false;
+    option.checked = false;
+
+    option.addEventListener("change", () => {
+      if (option.checked) {
+        for (const other of paymentOptions) {
+          if (other !== option) other.checked = false;
+        }
+      }
+    });
+  }
   const storeIcon = note.querySelector('.shop .symbol');
   const customerIcon = note.querySelector('.recipient .symbol');
 
