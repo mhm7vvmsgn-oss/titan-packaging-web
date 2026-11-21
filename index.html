@@ -669,9 +669,20 @@ $("storeHistory").onclick = async () => {
           await runTransaction(db, async tx => {
             const snap = await tx.get(sale.ref);
             const now = snap.data();
-            if (!now || now.day !== day || now.payment !== sale.payment ||
-                now.total !== sale.total ||
-                JSON.stringify(now.items) !== JSON.stringify(sale.items)) {
+                        function sameItems(a, b) {
+              const sortFields = (_, value) => {
+                if (!value || typeof value !== "object" || Array.isArray(value)) {
+                  return value;
+                }
+                return Object.fromEntries(
+                  Object.keys(value).sort().map(key => [key, value[key]])
+                );
+              };
+              return JSON.stringify(a, sortFields) === JSON.stringify(b, sortFields);
+            }
+
+            if (!now || now.day !== sale.day || now.payment !== sale.payment ||
+                now.total !== sale.total || !sameItems(now.items, sale.items)) {
               throw Error("บิลเปลี่ยนแล้ว กรุณากดดูยอดย้อนหลังอีกครั้ง");
             }
             if (update) tx.update(sale.ref, update);
