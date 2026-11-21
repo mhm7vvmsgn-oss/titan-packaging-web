@@ -2269,6 +2269,240 @@ tbody tr.blank{
 </html>`);
 
   win.document.close();
+  
+  // ปรับรูปไอคอนและระยะห่างของใบส่งสินค้า
+  const note = win.document;
+  const storeIcon = note.querySelector('.shop .symbol');
+  const customerIcon = note.querySelector('.recipient .symbol');
+
+  if (storeIcon) storeIcon.innerHTML = `
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <path fill="white" d="M9 25 15 9h34l6 16v6c0 4-3 7-7 7-3 0-5-1-7-4-2 3-5 4-9 4s-7-1-9-4c-2 3-4 4-7 4-4 0-7-3-7-7v-6Zm8 0h30l-3-9H20l-3 9Z"/>
+      <path fill="white" d="M12 39h7v12h26V39h7v19H12V39Zm13 0h14v19H25V39Zm6 6v8h3v-8h-3Z"/>
+    </svg>`;
+
+  if (customerIcon) customerIcon.innerHTML = `
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="19" r="13" fill="white"/>
+      <path fill="white" d="M7 58c0-17 10-26 25-26s25 9 25 26v3H7v-3Z"/>
+    </svg>`;
+
+  const metaIcons = note.querySelectorAll('.meta .mini-icon');
+
+  if (metaIcons[0]) metaIcons[0].innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="2.5" y="4" width="19" height="18" rx="2"/>
+      <path d="M7 2v5M17 2v5M3 10h18"/>
+      <path d="M7 14h2v2H7zM13 14h2v2h-2z"
+            fill="#087337" stroke="none"/>
+    </svg>`;
+
+  if (metaIcons[1]) metaIcons[1].innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m4 8 8-4 8 4-8 4-8-4Zm0 0v9l8 4 8-4V8M12 12v9"/>
+      <path d="m8 6 8 4"/>
+    </svg>`;
+
+  const layout = note.createElement('style');
+
+  layout.textContent = `
+    .paper {
+      padding:5mm
+    }
+
+    .header {
+      min-height:32mm;
+      gap:4mm
+    }
+
+    .logo {
+      width:32mm;
+      height:32mm
+    }
+
+    .brand .big {
+      font-size:37px;
+      letter-spacing:.5px
+    }
+
+    .brand .small {
+      font-size:22px;
+      letter-spacing:1px
+    }
+
+    .badge {
+      font-size:21px;
+      padding:11px 13px
+    }
+
+    .top-wave {
+      height:7mm;
+      margin:1mm 0 3mm
+    }
+
+    .parties {
+      grid-template-columns:minmax(0,30fr) minmax(0,70fr);
+      gap:3mm
+    }
+
+    .panel {
+      height:39mm
+    }
+
+    .shop {
+      grid-template-columns:11mm minmax(0,1fr)
+    }
+
+    .recipient {
+      grid-template-columns:18mm minmax(0,1fr)
+    }
+
+    .symbol svg {
+      width:70%;
+      max-width:44px;
+      height:auto;
+      stroke:none;
+      fill:white
+    }
+
+    .shop-info {
+      font-size:11px;
+      line-height:1.3;
+      padding:8px 6px
+    }
+
+    .entry {
+      font-size:17px;
+      padding:12px
+    }
+
+    .entry span {
+      min-height:30px
+    }
+
+    .meta {
+      gap:10mm;
+      margin:3mm 0
+    }
+
+    .meta .pill {
+      font-size:15px;
+      min-height:11mm;
+      padding:8px 11px;
+      gap:8px
+    }
+
+    .meta .mini-icon {
+      display:flex;
+      align-items:center;
+      flex:none
+    }
+
+    .meta .mini-icon svg {
+      width:26px;
+      height:26px;
+      fill:none;
+      stroke:#087337;
+      stroke-width:2.3;
+      stroke-linejoin:round;
+      stroke-linecap:round
+    }
+
+    .table-box {
+      display:flex;
+      flex-direction:column;
+      min-height:112mm
+    }
+
+    .table-box table {
+      height:99mm;
+      font-size:14px
+    }
+
+    th {
+      font-size:15px;
+      padding:9px 5px
+    }
+
+    th small {
+      font-size:11px
+    }
+
+    td {
+      padding:6px 5px
+    }
+
+    .payment {
+      margin-top:3mm;
+      font-size:15px
+    }
+
+    .payment .head {
+      font-size:15px
+    }
+
+    .signatures {
+      margin-top:3mm
+    }
+
+    .sign {
+      min-height:25mm;
+      font-size:15px
+    }
+
+    .bottom-wave {
+      height:14mm;
+      flex:none
+    }
+
+    @media print {
+      @page {
+        size:A4;
+        margin:0
+      }
+
+      html,body {
+        width:210mm;
+        margin:0;
+        padding:0;
+        background:#fff
+      }
+
+      .tools {
+        display:none!important
+      }
+
+      .paper {
+        width:204mm;
+        height:${lines.length <= 14 ? '290mm' : 'auto'};
+        min-height:0;
+        max-height:none;
+        margin:3mm auto 0;
+        padding:4mm;
+        border:2px solid #087337;
+        border-radius:9px;
+        overflow:${lines.length <= 14 ? 'hidden' : 'visible'};
+        box-sizing:border-box;
+        break-after:avoid;
+        page-break-after:avoid
+      }
+
+      .table-box,
+      .payment,
+      .signatures,
+      .bottom-wave {
+        break-inside:avoid
+      }
+
+      * {
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact
+      }
+    }
+  `;
+
+  note.head.appendChild(layout);
+
 };
 
 // === จบใบส่งสินค้าแบบใหม่ ===
