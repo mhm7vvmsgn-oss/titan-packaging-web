@@ -2720,13 +2720,19 @@ tbody tr.blank{
       line-height:32px;
       white-space:pre-wrap;
       overflow-wrap:anywhere;
-      background-image:repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 30px,
-        #087337 30px,
-        #087337 32px
-      );
+          background: white;
+      position: relative;
+      border-bottom: 2px solid #087337;
+    }
+
+    .titan-address-lines::before {
+      content: "";
+      position: absolute;
+      top: 30px;
+      left: 0;
+      right: 0;
+      border-top: 2px solid #087337;
+      pointer-events: none;
     }
 
     @media print {
