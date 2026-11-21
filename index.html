@@ -2886,6 +2886,78 @@ tbody tr.blank{
   `;
 
   note.head.appendChild(fixOnePage);
+    const badge = note.querySelector(".header .badge");
+  const printButton = note.querySelector(".tools button");
+  const numberLabel = note.createElement("span");
+
+  badge.style.position = "relative";
+  numberLabel.style.cssText = `
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 2px;
+    color: #246437;
+    font: 600 12px/1.2 Tahoma, Arial, sans-serif;
+    white-space: nowrap;
+  `;
+  badge.appendChild(numberLabel);
+
+  const deliveryDate = new Date();
+  const dayKey = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Bangkok",
+    calendar: "buddhist",
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(deliveryDate);
+  const part = type => dayKey.find(p => p.type === type).value;
+  const prefix = part("year") + part("month") + part("day");
+
+  let savedNumber = "";
+  printButton.textContent = "บันทึกใบส่งสินค้า / พิมพ์ PDF";
+
+  printButton.onclick = async () => {
+    if (savedNumber) {
+      win.print();
+      return;
+    }
+
+    printButton.disabled = true;
+    try {
+      const { doc, runTransaction } = await import(
+        "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"
+      );
+      const counter = doc(db, "deliveryCounters", prefix);
+      const delivery = doc(collection(db, "deliveryNotes"));
+
+      savedNumber = await runTransaction(db, async tx => {
+        const snapshot = await tx.get(counter);
+        const next = (snapshot.data()?.lastNumber ?? 0) + 1;
+        const number = prefix + "-" + String(next).padStart(3, "0");
+
+        tx.set(counter, { lastNumber: next });
+        tx.set(delivery, {
+          number,
+          date: deliveryDate,
+          customer: note.querySelector(".titan-name-line").innerText.trim(),
+          address: note.querySelector(".titan-address-lines").innerText.trim(),
+          items: lines,
+          total
+        });
+        return number;
+      });
+
+      numberLabel.textContent = "เลขที่เอกสาร / Doc No. " + savedNumber;
+      note.title = "ใบส่งสินค้า_" + savedNumber;
+      printButton.textContent = "พิมพ์ / บันทึก PDF";
+      win.print();
+    } catch (error) {
+      console.error(error);
+      win.alert("บันทึกใบส่งสินค้าไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตและสิทธิ์บันทึกใน Firebase แล้วลองอีกครั้ง");
+    } finally {
+      printButton.disabled = false;
+    }
+  };
 
 
 
