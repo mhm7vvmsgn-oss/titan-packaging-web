@@ -4682,6 +4682,231 @@ area.style.display = "none";
   }
 }
 </script>
+<!-- หน้าร้าน Titan Packaging -->
+<style>
+  body {
+    background: #faf5eb;
+    color: #173e29;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
 
+  body > header {
+    background: #10452b;
+    padding: 18px max(16px, calc((100% - 820px) / 2)) 12px;
+  }
+
+  body > header > div:first-child {
+    justify-content: center !important;
+    gap: 14px !important;
+  }
+
+  body > header img {
+    order: -1;
+    width: 68px !important;
+    height: 68px !important;
+  }
+
+  body > header h1 {
+    font-size: clamp(20px, 5.7vw, 32px);
+    letter-spacing: -.035em;
+    line-height: 1.1;
+  }
+
+  body > header h1 + small {
+    margin-top: 5px;
+    color: white;
+    opacity: .9;
+  }
+
+  header nav {
+    padding: 4px;
+    gap: 4px;
+    border-radius: 16px;
+    background: #fff8eb;
+  }
+
+  header nav button {
+    color: #17462c;
+    background: transparent;
+    font-weight: 700;
+  }
+
+  header nav button.active {
+    color: white;
+    background: #155632;
+  }
+
+  #customerPage > .panel {
+    border: 1px solid #e3dac9;
+    box-shadow: 0 3px 12px #5740200c;
+  }
+
+  #customerPage > .titan-category-panel {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  #categoryTitle {
+    border-left: 4px solid #e78022;
+    padding-left: 10px;
+    margin: 17px 0 12px;
+  }
+
+  #customerPage > #search {
+    display: block;
+    margin: 4px 0 12px;
+    padding: 14px;
+    border: 1px solid #c7bda9;
+    border-radius: 14px;
+    background: white;
+    font-size: 16px;
+  }
+
+  #categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #categories .category {
+    overflow: hidden;
+    padding: 0 0 10px;
+    border: 1px solid #dbcfb8;
+    border-radius: 15px;
+    background: #fff7e9;
+    color: #173e29;
+    font-size: clamp(16px, 4.3vw, 21px);
+    font-weight: 750;
+    line-height: 1.4;
+    box-shadow: 0 2px 5px #533c2415;
+  }
+
+  #categories .category.active {
+    border-color: #267543;
+    box-shadow: inset 0 0 0 2px #267543;
+  }
+
+  #categories .category.locked {
+    background: #e5eadc;
+    color: #38533e;
+  }
+
+  #categories .category > small {
+    font-size: 12px;
+  }
+
+  #categories .category .admin-only {
+    margin-top: 3px;
+    font-size: 10px;
+  }
+
+  #categories .admin-only small {
+    display: inline;
+    margin-left: 4px;
+  }
+
+  #categories .category > span:first-child {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2.4;
+    margin-bottom: 6px;
+    font-size: 0;
+    background-size: 100% 600%;
+    background-repeat: no-repeat;
+    background-image: url("data:image/webp;base64,UklGRjYGAABXRUJQVlA4ICoGAAAQKACdASpgAPAAPt1gqU2opaQmLBNcsRAbiWMfQAlKIh5mfkFzQuTXM74SqZVpcahbwqusBd/303CslAyKi1JGpviRVWgPknmceXc77FeUQQvTiEpzmp+fq8xev2v3qIRzcV/wG5gdow0HZv/2IGbNt+Zp0Fk087FYZOOJbYwWKWw1VzK7IVk9ouDuMekP8lNLOFPWBdmh34VXJr/3icy1VU55VYVTUR4QP1zofEj6c+zzxxFxBUn9SJleEPfWRMGF43j6+fjN+BupKdCwr96Vhy0GkF2R/phBuW/0En7kirBxq0ADdrqY7En0MD85QnotxUepJRfhXsO2+xiV9kKb/T0BNrPeCSxlCVEB38fWMf+X+Augm+mm8B6RX9NetwC4zMaVpo+iVY2cPuPC6RroTL9q4wuA+gltNXVi5lX8T1umIktx+2XrAAD+8Tw/sKZ9oGvvA4MP/zT6PWMKPqehgNu7goVpFbd0ZWhV2qLQX8f7o8PiReoC2ObwRF59pu8dvruvBfuMZ9kxIrJu/WSTPEx+uSf1xaqz9e3l7WNRYoZ7fVc4QGOJp4rhcuWSpdC4fo2wu7O2i8pN0GQWoBYhrzod5cstx/RWkE/bfa6TrIyPcNhYq1rId5V2vGcPWI8mzSn41fo1CXDYt4F7phJ9BI20PV4kLce4Yy0OX9q7s1p3MCSTPwjcyzXAZJVdNVtBF2i6+excUfd5RUM1zCQTIuZzyvjw59Xd31fZLvrOtmRX3FZGQHjBruRC9kL1ByWAB/sRL7yuVQL0SwGXySHtjKYk6ClNutumFdxjYJVDR5fkCUgNA6N/SQd88pXkQpPcEGSsKoi5a4XPjZVj3ucZtrmFJs6ocK3K09DjaRAhv50LHoEIuqjQldrUWaubl3RKN56DG7xVgusk/jzYRqbpJ2PbR9LbPi1i1GAKUMgUf5ll22ISUUCz0Z7l6EpYQMgC2+w5FWu/MZjVPOYk+ZsEDVy1GdVKUYJpQQ9rA0PPhuCHTl828qZva7fMJhWMIbHBl8UPwPwOTHx/FrGNaD3eEcp150H8ol+vKePTr1LMzt9XfAWGk8SzqnKGNpTFT/KIgIItyEOBdUXWneBq+LaBbQMG1UzMkFMSQJA/o3DJWfi6GsFhZKV9+PmQU2xQhbRUbqqXz9mrVgq+qlI2cLWo/3PB/bGFq+DKMR0Ii2HvnTbn6RMa4rJ+32tzRH4Zgjj4XQTfW6xWD2XJlCAvIRf233w8KGSGltBD25NJ2tjsOLPBRJhTa506tDETtAlWxE4YAP4H3kPHvCGiKWn7kEmzTl7wDCa8K1d0cHkCf2LWJL6XnxKffFSrYJneYOsNr1xykGv4pF0aDDQkPaDIXRbK6uB9n7UWcHLLPk2g7UwCuX6JzZEE+Nwc4WAj8Dcg36KjJc2Pnpju6+9PlGi7RLNttWMuNHV0V0Sdmd0mTLLDXp9/6I4Sp5MuJSMOoo8KkeQBR/S28FWoZDcJ7X2RclNWo84pT6ki1H3moQWsV/SgQ1CIHzyaIXd/ydmqniTGj7NI69rydVlAdZU2WV3V3x2DFsYM4BssggDERihtG75xvR8sRpdAcOTvduWyOeLvB7SgU9AFCyVFUqcloG8B4rrGXsmO3Fy9UH3W1DWR+b2/4Ja8N/aHBM0cu1qr2z41t8oe2tiohNhcQqx/EnvBKEHxf5AAlIG0txNklRyDajQHd7t0t542e3/hjjx8HBAaMPtzs9luJZjCouThDiVQwKjaZ1yGKQpEEGOnRL1xNOqjzUIWFtbuhsCp6k4E+W9AwRXLVf0SYFcQ70C9RuP0kIpCHZ9umpxHIkw9uUHKwKKBXBMmiNcA+Bc76gELqZZ21vfbFj3spwjD1RWMq0LBo+AJnIxk0jD0/4qPSgwYQbt+D9hkrEaXeDEZDIoK6a17kGTN33vCH3zFH1cA/yk7XzG8GG1qfmky/sBLl4ihmHd3LpSHVPXir4pcK6cZ9k3KykxhzoUnV1g3oFvmXRKYOcj6aJEgM1ODP4gKV0U/AiLL0GCwBDKcpmkiqrco6t8c/d8gfaxiAsnzdM2p67g8N8+PFjLwFoS2GYbq4gew7dySReDB6OSflEgAAAA=");
+  }
+
+  #categories [data-cat="box"] > span { background-position: center 0%; }
+  #categories [data-cat="tape"] > span { background-position: center 20%; }
+  #categories [data-cat="bubble"] > span { background-position: center 40%; }
+  #categories [data-cat="mailer"] > span { background-position: center 60%; }
+  #categories [data-cat="other"] > span { background-position: center 80%; }
+  #categories [data-cat="special"] > span { background-position: center 100%; }
+
+  #cartShortcut {
+    left: 50%;
+    right: auto;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    width: min(820px, calc(100% - 24px));
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 18px;
+    border-radius: 17px;
+    background: #10482d;
+    color: white;
+    text-align: left;
+  }
+
+  #cartShortcut .cart-count {
+    background: #ffa445;
+    color: #243224;
+  }
+
+  #cartShortcut strong {
+    margin-left: auto;
+    font-size: 21px;
+  }
+
+  body button {
+    transition: scale .12s, background-color .15s, box-shadow .15s;
+  }
+
+  body button:not(:disabled):active {
+    scale: .965;
+  }
+
+  @media (min-width: 700px) {
+    #categories { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body button { transition: none; }
+    body button:not(:disabled):active { scale: 1; }
+  }
+</style>
+
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const customer = document.getElementById("customerPage");
+    const categories = document.getElementById("categories");
+    const search = document.getElementById("search");
+    const shortcut = document.getElementById("cartShortcut");
+    const count = document.getElementById("floatingCount");
+    const total = document.getElementById("total");
+    if (!customer || !categories || !search || !shortcut || !count || !total) return;
+
+    const categoryPanel = categories.closest(".panel");
+    const productHeading = search.closest(".panel")?.querySelector("h2");
+    if (categoryPanel) {
+      categoryPanel.classList.add("titan-category-panel");
+      customer.insertBefore(search, categoryPanel);
+      search.placeholder = "ค้นหาสินค้า / Search Products";
+      search.setAttribute("aria-label", "ค้นหาสินค้า / Search Products");
+    }
+    if (productHeading) {
+      productHeading.innerHTML = "รายการสินค้า<small>Products</small>";
+    }
+
+    const brand = document.querySelector("body > header h1");
+    if (brand) brand.textContent = "TITAN PACKAGING";
+
+    const cartLabel = document.createElement("span");
+    cartLabel.innerHTML = "ตะกร้า<small>Cart</small>";
+    const amount = document.createElement("strong");
+    const updateAmount = () => { amount.textContent = total.textContent; };
+
+    shortcut.replaceChildren("🛒", cartLabel, count, amount);
+    updateAmount();
+    new MutationObserver(updateAmount).observe(total, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+  }, { once: true });
+</script>
 </body>
 </html>
