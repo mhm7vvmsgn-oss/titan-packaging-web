@@ -1358,6 +1358,25 @@ $("download").onclick = async () => {
     a.remove();
 
     setTimeout(() => URL.revokeObjectURL(url), 10000);
+        const jpgItems = items.map(({ p, color, qty }) => ({
+      name: p.name,
+      color: color || (p.category === "tape" ? p.color : "") || "",
+      qty,
+      unitPrice: Number(p.price),
+      amount: Math.round(Number(p.price) * qty * 100)
+    }));
+
+    try {
+      await addDoc(collection(db, "jpgSaleRequests"), {
+        items: jpgItems,
+        payment,
+        time: now.getTime(),
+        total: jpgItems.reduce((sum, item) => sum + item.amount, 0),
+        submittedAt: serverTimestamp()
+      });
+    } catch (error) {
+      alert("สร้าง JPG แล้ว แต่ส่งให้แอดมินไม่สำเร็จ · " + error.message);
+    }
 
   } catch (err) {
     alert("บันทึก JPG ไม่สำเร็จ: " + err.message);
