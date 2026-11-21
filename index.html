@@ -4908,5 +4908,30 @@ area.style.display = "none";
     });
   }, { once: true });
 </script>
-</body>
+<style>
+  #categories .category {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+
+  #categories .category > span:first-child {
+    width: calc(100% - 16px);
+    aspect-ratio: 9 / 4;
+    margin: 0 auto 8px;
+    border-radius: 9px;
+    background-image: url("./76FCD76E-2D10-49F0-BA9E-19C77E9E3F22.jpeg");
+    background-size: 200% 300%;
+    background-repeat: no-repeat;
+  }
+
+  #categories [data-cat="box"] > span:first-child     { background-position: left top; }
+  #categories [data-cat="tape"] > span:first-child    { background-position: right top; }
+  #categories [data-cat="bubble"] > span:first-child  { background-position: left center; }
+  #categories [data-cat="mailer"] > span:first-child  { background-position: right center; }
+  #categories [data-cat="other"] > span:first-child   { background-position: left bottom; }
+  #categories [data-cat="special"] > span:first-child { background-position: right bottom; }
+</style></body>
 </html>
