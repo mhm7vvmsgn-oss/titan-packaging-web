@@ -1007,7 +1007,158 @@ $("clear").onclick=()=>{
 cart={};
 renderCart();
 };
+const jpgMenu = document.createElement("button");
+jpgMenu.type = "button";
+jpgMenu.style.cssText = saleMenu.style.cssText;
+jpgMenu.innerHTML = "ประวัติขายล่าสุด<small>Recent JPG Sales</small>";
+saleMenu.after(jpgMenu);
 
+const jpgBox = document.createElement("dialog");
+jpgBox.style.cssText = salesBox.style.cssText;
+jpgBox.innerHTML = `
+  <h2>ประวัติขายล่าสุด<small>Recent JPG Sales</small></h2>
+  <p id="jpgStatus" role="status"></p>
+  <div id="jpgRows"></div>
+  <button type="button" id="jpgClear">ล้างรายการรอทั้งหมด / Clear pending</button>
+  <button type="button" id="jpgClose">ปิด / Close</button>`;
+document.body.append(jpgBox);
+
+let stopJpg = null;
+let jpgDocs = [];
+let jpgWorking = false;
+
+function validJpgBill(bill) {
+  if (!Array.isArray(bill.items) || !bill.items.length) return false;
+  if (!["เงินสด", "เงินโอน", "ไม่ระบุ"].includes(bill.payment)) return false;
+  if (!bill.submittedAt?.toDate) return false;
+  const validItems = bill.items.every(item =>
+    item && typeof item.name === "string" &&
+    typeof item.color === "string" &&
+    Number.isFinite(item.qty) && item.qty > 0 &&
+    Number.isFinite(item.unitPrice) && item.unitPrice >= 0 &&
+    Number.isSafeInteger(item.amount) &&
+    item.amount === Math.round(item.unitPrice * item.qty * 100)
+  );
+  return validItems && Number.isSafeInteger(bill.total) &&
+    bill.total === bill.items.reduce((sum, item) => sum + item.amount, 0);
+}
+
+async function handleJpg(docs, approve) {
+  if (jpgWorking || !docs.length || !validAdmin(auth?.currentUser)) return;
+
+  if (approve) {
+    const pin = prompt("ยืนยันยอด " + saleMoney(docs[0].data().total) + " · ใส่ PIN");
+    if (pin === null) return;
+    if (pin !== "1234") return alert("PIN ไม่ถูกต้อง");
+  } else if (!confirm("ลบรายการที่รอยืนยัน " + docs.length + " บิลหรือไม่?")) {
+    return;
+  }
+
+  jpgWorking = true;
+  $("jpgRows").inert = true;
+  try {
+    for (const draft of docs) {
+      if (!approve) {
+        await deleteDoc(draft.ref);
+        continue;
+      }
+      const target = doc(db, "storeSales", "jpg-" + draft.id);
+      await runTransaction(db, async tx => {
+        const pending = await tx.get(draft.ref);
+        const existing = await tx.get(target);
+        if (!pending.exists()) {
+          if (existing.exists()) return;
+          throw Error("บิลนี้ถูกลบจากรายการรอแล้ว");
+        }
+        const bill = pending.data();
+        if (!validJpgBill(bill)) throw Error("ข้อมูลบิลหรือยอดรวมไม่ถูกต้อง");
+        if (!existing.exists()) {
+          const soldAt = bill.submittedAt.toDate();
+          tx.set(target, {
+            items: bill.items, payment: bill.payment, total: bill.total,
+            soldAt, day: saleDay(soldAt), createdAt: serverTimestamp()
+          });
+        }
+        tx.delete(draft.ref);
+      });
+    }
+  } catch (error) {
+    alert("ทำรายการไม่สำเร็จ · " + error.message);
+  } finally {
+    jpgWorking = false;
+    $("jpgRows").inert = false;
+  }
+}
+
+jpgMenu.onclick = () => {
+  if (!validAdmin(auth?.currentUser)) return alert("กรุณาเข้าสู่ระบบแอดมินก่อน");
+  $("jpgRows").replaceChildren();
+  $("jpgClear").disabled = true;
+  $("jpgStatus").textContent = "กำลังโหลดรายการรอยืนยัน…";
+  jpgBox.showModal();
+
+  stopJpg = onSnapshot(collection(db, "jpgSaleRequests"), snapshot => {
+    if (!validAdmin(auth?.currentUser)) return jpgBox.close();
+    const time = d => d.data().submittedAt?.toMillis?.() || 0;
+    jpgDocs = [...snapshot.docs].sort((a, b) => time(b) - time(a));
+    $("jpgRows").replaceChildren();
+    $("jpgStatus").textContent = "รอยืนยัน " + jpgDocs.length + " บิล";
+    $("jpgClear").disabled = !jpgDocs.length;
+
+    for (const draft of jpgDocs) {
+      const bill = draft.data();
+      const valid = validJpgBill(bill);
+      const card = document.createElement("details");
+      const title = document.createElement("summary");
+      title.textContent = valid
+        ? bill.submittedAt.toDate().toLocaleString("th-TH", {
+            timeZone: "Asia/Bangkok"
+          }) + " · " + saleMoney(bill.total)
+        : "ข้อมูลบิลไม่ครบ · ลบรายการนี้ได้";
+      card.append(title);
+
+      if (valid) {
+        for (const item of bill.items) {
+          const line = document.createElement("p");
+          line.textContent = [item.name, item.color].filter(Boolean).join(" ") +
+            " × " + item.qty + " · " + saleMoney(item.amount);
+          card.append(line);
+        }
+        const method = document.createElement("p");
+        method.textContent = "วิธีชำระเงิน · " + bill.payment;
+        card.append(method);
+
+        const save = document.createElement("button");
+        save.type = "button";
+        save.textContent = "ยืนยันเข้ารายการขายหน้าร้าน / Confirm";
+        save.onclick = () => handleJpg([draft], true);
+        card.append(save);
+      }
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "ลบรายการนี้ / Remove";
+      remove.onclick = () => handleJpg([draft], false);
+      card.append(remove);
+      $("jpgRows").append(card);
+    }
+  }, error => {
+    jpgDocs = [];
+    $("jpgRows").replaceChildren();
+    $("jpgClear").disabled = true;
+    $("jpgStatus").textContent = "โหลดรายการไม่ได้ · " + error.message;
+  });
+};
+
+$("jpgClear").onclick = () => handleJpg(jpgDocs.slice(), false);
+$("jpgClose").onclick = () => { if (!jpgWorking) jpgBox.close(); };
+jpgBox.addEventListener("cancel", e => { if (jpgWorking) e.preventDefault(); });
+jpgBox.addEventListener("close", () => {
+  if (stopJpg) stopJpg();
+  stopJpg = null;
+  jpgDocs = [];
+  $("jpgRows").replaceChildren();
+});
 $("download").onclick = async () => {
   const items = entries();
   if (!items.length) {
