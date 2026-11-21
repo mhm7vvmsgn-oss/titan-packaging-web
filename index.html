@@ -2502,6 +2502,106 @@ tbody tr.blank{
   `;
 
   note.head.appendChild(layout);
+  
+  // ปรับขนาดใบส่งสินค้าให้พอดี A4 หน้าเดียว
+
+  if (lines.length > 12) {
+    const count = lines.length;
+
+    const fitScale = count <= 25
+      ? 1
+      : Math.max(0.5, 1 - (count - 25) * 0.02);
+
+    const fitRules = note.createElement("style");
+
+    fitRules.textContent = `
+      @media print {
+        .paper {
+          zoom: ${fitScale};
+
+          width: ${(204 / fitScale).toFixed(3)}mm !important;
+          height: ${(290 / fitScale).toFixed(3)}mm !important;
+
+          min-height: 0 !important;
+          max-height: none !important;
+
+          margin: ${(3 / fitScale).toFixed(3)}mm auto 0 !important;
+          padding: ${(4 / fitScale).toFixed(3)}mm !important;
+
+          overflow: visible !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
+        .table-box {
+          min-height: 0 !important;
+          flex: 1 1 auto !important;
+          display: flex !important;
+          flex-direction: column !important;
+          overflow: visible !important;
+        }
+
+        .table-box table {
+          height: auto !important;
+          flex: 1 1 auto !important;
+          font-size: 11px !important;
+          line-height: 1.15 !important;
+        }
+
+        .table-box td {
+          padding: 1px 4px !important;
+        }
+
+        .table-box th {
+          padding: 4px 3px !important;
+          font-size: 12px !important;
+        }
+
+        .table-box th small {
+          font-size: 8px !important;
+        }
+
+        .grand {
+          flex: 0 0 11mm !important;
+          min-height: 0 !important;
+          font-size: 13px !important;
+        }
+
+        .grand strong {
+          font-size: 15px !important;
+          padding: 5px !important;
+        }
+
+        .payment {
+          min-height: 10mm !important;
+          margin-top: 2mm !important;
+        }
+
+        .payment .head {
+          padding: 6px !important;
+        }
+
+        .signatures {
+          margin-top: 2mm !important;
+        }
+
+        .sign {
+          min-height: 20mm !important;
+        }
+
+        .bottom-wave {
+          height: 13mm !important;
+          flex: 0 0 13mm !important;
+          margin-top: auto !important;
+        }
+      }
+    `;
+
+    note.head.appendChild(fitRules);
+  }
+
+  // จบระบบปรับขนาด A4 อัตโนมัติ
+
 
 };
 
