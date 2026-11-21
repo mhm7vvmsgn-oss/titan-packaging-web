@@ -632,7 +632,17 @@ $("storeHistory").onclick = async () => {
       collection(db, "storeSales"), where("day", "==", day)
     ));
     if (request !== historyRequest) return;
-    const sales = snapshot.docs.map(d => d.data())
+    
+    }    if (sales.length > 0) {
+      const pdfButton = document.createElement("button");
+      pdfButton.type = "button";
+      pdfButton.style.cssText =
+        "width:100%;margin:12px 0;background:#087cb8;color:white";
+      pdfButton.innerHTML =
+        "บันทึก PDF รายวัน<small>Save Daily Sales PDF</small>";
+
+      pdfButton.onclick = () => 
+        const sales = snapshot.docs.map(d => d.data())
       .sort((a, b) => b.soldAt.toMillis() - a.soldAt.toMillis());
     const sum = sales.reduce((n, sale) => n + sale.total, 0);
     $("storeMessage").textContent =
@@ -651,16 +661,7 @@ $("storeHistory").onclick = async () => {
         row.textContent = `${item.name} ${item.color} × ${item.qty} · ${saleMoney(item.amount)}`;
         detail.append(row);
       }
-      results.append(detail);
-    }    if (sales.length > 0) {
-      const pdfButton = document.createElement("button");
-      pdfButton.type = "button";
-      pdfButton.style.cssText =
-        "width:100%;margin:12px 0;background:#087cb8;color:white";
-      pdfButton.innerHTML =
-        "บันทึก PDF รายวัน<small>Save Daily Sales PDF</small>";
-
-      pdfButton.onclick = () => {
+      results.append(detail);{
         if (!validAdmin(auth?.currentUser)) return;
 
         if ($("storeDay").value !== day) {
