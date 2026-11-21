@@ -1677,6 +1677,602 @@ if (card) {
 updateDeliveryNoteLock();
 
 
+//// TITAN PACKAGING - ใบส่งสินค้าแบบใหม่
+
+$("createDeliveryNote").onclick = () => {
+  if (!validAdmin(auth?.currentUser)) {
+    alert("สำหรับผู้ดูแลเท่านั้น กรุณาเข้าสู่ระบบก่อน");
+    return;
+  }
+
+  const lines = entries().map(e => ({
+    name: e.p.name + (e.color ? " (สี" + e.color + ")" : ""),
+    qty: Number(e.qty),
+    price: Number(e.p.price)
+  }));
+
+  if (!lines.length) {
+    alert("กรุณาเพิ่มสินค้าในตะกร้าก่อน");
+    return;
+  }
+
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("กรุณาอนุญาตให้เปิดหน้าต่างใหม่ แล้วลองอีกครั้ง");
+    return;
+  }
+
+  const baht = n => Number(n).toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  const today = new Date().toLocaleDateString("th-TH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+
+  const total = lines.reduce(
+    (sum, p) => sum + p.qty * p.price, 0
+  );
+
+  const logoUrl = new URL(
+    "./titan-original-logo.png", location.href
+  ).href;
+
+  const payment = document.querySelector(
+    'input[name="titan-checkout-method"]:checked'
+  )?.value || "cash";
+
+  const rows = lines.map((p, i) => `
+    <tr>
+      <td class="center">${i + 1}</td>
+      <td class="product">${escapeHTML(p.name)}</td>
+      <td class="right">${baht(p.price)}</td>
+      <td class="center">${p.qty.toLocaleString("th-TH")}</td>
+      <td class="right">${baht(p.qty * p.price)}</td>
+    </tr>
+  `).join("");
+
+  const blankRows = Array.from(
+    { length: Math.max(0, 10 - lines.length) },
+    () => '<tr class="blank"><td></td><td></td><td></td><td></td><td></td></tr>'
+  ).join("");
+
+  win.document.open();
+  win.document.write(`<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ใบส่งสินค้า - Titan Packaging</title>
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#e9f1ea;
+  color:#183626;
+  font-family:Tahoma,Arial,sans-serif
+}
+
+.tools{
+  max-width:210mm;
+  margin:12px auto;
+  display:flex;
+  gap:10px;
+  padding:0 8px
+}
+
+.tools button{
+  border:0;
+  border-radius:9px;
+  background:#087337;
+  color:white;
+  padding:11px 14px;
+  font:inherit
+}
+
+.paper{
+  width:210mm;
+  min-height:297mm;
+  margin:0 auto 18px;
+  padding:6mm;
+  display:flex;
+  flex-direction:column;
+  background:white;
+  border:2px solid #087337;
+  border-radius:9px
+}
+
+.header{
+  display:flex;
+  align-items:center;
+  gap:4mm;
+  min-height:29mm
+}
+
+.logo{
+  width:29mm;
+  height:29mm;
+  object-fit:contain;
+  flex:none
+}
+
+.brand{
+  border-left:2px solid #07652d;
+  padding-left:3mm;
+  flex:1;
+  min-width:0;
+  color:#00652d;
+  font-weight:900;
+  line-height:1
+}
+
+.brand .big{
+  display:block;
+  font-size:27px;
+  letter-spacing:1px
+}
+
+.brand .small{
+  display:block;
+  font-size:18px;
+  letter-spacing:1px;
+  margin-top:5px
+}
+
+.badge{
+  background:#00652d;
+  border-radius:9px;
+  color:white;
+  padding:10px 12px;
+  font-size:19px;
+  font-weight:800;
+  text-align:center;
+  white-space:nowrap;
+  flex:none
+}
+
+.top-wave{
+  height:8mm;
+  width:100%;
+  display:block;
+  margin:0 0 3mm
+}
+
+.parties{
+  display:grid;
+  grid-template-columns:30fr 70fr;
+  gap:3mm
+}
+
+.panel{
+  height:36mm;
+  min-width:0;
+  overflow:hidden;
+  display:grid;
+  border:2px solid #087337;
+  border-radius:10px;
+  background:white
+}
+
+.shop{
+  grid-template-columns:12mm minmax(0,1fr)
+}
+
+.recipient{
+  grid-template-columns:18mm minmax(0,1fr)
+}
+
+.symbol{
+  background:#087337;
+  display:flex;
+  align-items:center;
+  justify-content:center
+}
+
+.symbol svg{
+  width:60%;
+  max-width:32px;
+  height:auto;
+  stroke:#fff;
+  fill:none;
+  stroke-width:1.8
+}
+
+.shop-info{
+  font-size:9.5px;
+  line-height:1.35;
+  padding:7px 5px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  overflow-wrap:anywhere
+}
+
+.shop-info b{font-weight:800}
+
+.recipient-fields{
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  min-width:0
+}
+
+.entry{
+  padding:8px 9px;
+  font-size:14px;
+  font-weight:700;
+  outline:none;
+  min-width:0
+}
+
+.entry+.entry{
+  border-top:2px solid #087337
+}
+
+.entry span{
+  font-weight:400;
+  display:inline-block;
+  vertical-align:top;
+  min-width:65%;
+  min-height:28px;
+  outline:none;
+  overflow-wrap:anywhere
+}
+
+.meta{
+  display:flex;
+  justify-content:space-between;
+  gap:8mm;
+  margin:4mm 0 3mm
+}
+
+.meta .pill{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  background:#e5f7e7;
+  border-radius:8px;
+  padding:7px 10px;
+  flex:1;
+  min-width:0;
+  font-size:13px
+}
+
+.meta .pill:last-child{
+  justify-content:flex-end
+}
+
+.meta b{color:#075a2a}
+
+.meta .mini-icon{
+  font-size:20px;
+  color:#07652d
+}
+
+.table-box{
+  border:2px solid #07652d;
+  border-radius:10px;
+  overflow:hidden
+}
+
+table{
+  border-collapse:collapse;
+  table-layout:fixed;
+  width:100%;
+  font-size:12px
+}
+
+thead{
+  background:#07652d;
+  color:white
+}
+
+th{
+  padding:9px 4px;
+  font-size:13px;
+  line-height:1.25
+}
+
+th small{
+  display:block;
+  font-weight:400;
+  font-size:10px
+}
+
+td{
+  padding:7px 5px;
+  border-right:1px solid #087337;
+  border-bottom:1px solid #087337;
+  overflow-wrap:anywhere
+}
+
+th:not(:last-child){
+  border-right:1px solid #b5d5bd
+}
+
+td:last-child{border-right:none}
+
+tbody tr:nth-child(even){
+  background:#f1f8f1
+}
+
+tbody tr.blank{
+  height:8mm;
+  background:white
+}
+
+.center{text-align:center}
+.right{text-align:right}
+.product{font-weight:700}
+
+.grand{
+  background:#087337;
+  color:white;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:14px;
+  min-height:13mm;
+  padding-left:8px;
+  font-weight:800;
+  font-size:16px
+}
+
+.grand strong{
+  background:#e3f8d9;
+  color:#00652d;
+  border-radius:8px;
+  padding:10px 12px;
+  min-width:36mm;
+  text-align:right;
+  font-size:18px;
+  white-space:nowrap
+}
+
+.payment{
+  display:flex;
+  align-items:center;
+  border:2px solid #087337;
+  border-radius:8px;
+  overflow:hidden;
+  margin-top:4mm;
+  min-height:13mm;
+  font-size:13px
+}
+
+.payment .head{
+  background:#087337;
+  color:white;
+  padding:11px 12px;
+  font-weight:bold;
+  white-space:nowrap
+}
+
+.payment label{
+  padding:6px 8px;
+  white-space:nowrap
+}
+
+.payment input{
+  accent-color:#087337;
+  vertical-align:middle;
+  width:16px;
+  height:16px
+}
+
+.signatures{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4mm;
+  margin-top:4mm
+}
+
+.sign{
+  border:2px solid #087337;
+  border-radius:9px;
+  min-height:25mm;
+  padding:10px;
+  font-size:13px;
+  font-weight:700;
+  position:relative
+}
+
+.sign .line{
+  position:absolute;
+  bottom:7mm;
+  left:6mm;
+  right:6mm;
+  border-bottom:1px solid #333
+}
+
+.bottom-wave{
+  width:100%;
+  height:16mm;
+  margin-top:auto;
+  display:block
+}
+
+@page{size:A4;margin:0}
+
+@media print{
+  body{background:white}
+  .tools{display:none}
+  .paper{
+    margin:0;
+    border-radius:0;
+    min-height:297mm;
+    break-after:auto
+  }
+  *{
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact
+  }
+  tr{break-inside:avoid}
+}
+
+@media screen and (max-width:800px){
+  .tools{margin:8px}
+  body{overflow-x:auto}
+  .paper{margin:0 8px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="tools">
+  <button onclick="window.print()">
+    พิมพ์ / บันทึก PDF
+  </button>
+  <button onclick="window.close()">ปิด</button>
+</div>
+
+<div class="paper">
+  <div class="header">
+    <img class="logo" src="${escapeHTML(logoUrl)}"
+         alt="Titan Packaging">
+    <div class="brand">
+      <span class="big">TITAN</span>
+      <span class="small">PACKAGING</span>
+    </div>
+    <div class="badge">ใบส่งสินค้า / DELIVERY</div>
+  </div>
+
+  <svg class="top-wave" viewBox="0 0 760 30"
+       preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 18 Q320 44 760 4" fill="none"
+          stroke="#ffa51f" stroke-width="5"/>
+    <path d="M0 26 Q360 50 760 11" fill="none"
+          stroke="#5eac23" stroke-width="5"/>
+  </svg>
+
+  <div class="parties">
+    <div class="panel shop">
+      <div class="symbol">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9 5 4h14l2 5v11H3V9Zm0 0h18M8 9v4m8-4v4M9 20v-6h6v6"/>
+        </svg>
+      </div>
+      <div class="shop-info">
+        <div>
+          <b>ร้านค้า :</b> อุปกรณ์แพ็คกิ้งราคาโรงงาน
+          <div>รับ-ส่ง พัสดุ by Titan Packaging</div>
+          <div>@ท่าตำหนัก</div>
+        </div>
+        <div>
+          <b>ติดต่อ :</b> โทร 0612922895
+          <div>( คุณ แอร์ )</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel recipient">
+      <div class="symbol">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="7" r="4"/>
+          <path d="M4 22v-3a8 8 0 0 1 16 0v3"/>
+        </svg>
+      </div>
+      <div class="recipient-fields">
+        <div class="entry">
+          ลูกค้า :
+          <span contenteditable="true"
+                aria-label="ลูกค้า"></span>
+        </div>
+        <div class="entry">
+          ที่อยู่ :
+          <span contenteditable="true"
+                aria-label="ที่อยู่"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <div class="pill">
+      <span class="mini-icon">▣</span>
+      <b>วันที่ / Date :</b> ${today}
+    </div>
+    <div class="pill">
+      <span class="mini-icon">▱</span>
+      <b>จำนวนรายการ / Items :</b> ${lines.length}
+    </div>
+  </div>
+
+  <div class="table-box">
+    <table>
+      <colgroup>
+        <col style="width:11%">
+        <col style="width:35%">
+        <col style="width:20%">
+        <col style="width:14%">
+        <col style="width:20%">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>ลำดับ<small>No.</small></th>
+          <th>รายการสินค้า<small>Product</small></th>
+          <th>ราคาต่อหน่วย<small>Unit Price</small></th>
+          <th>จำนวน<small>Qty</small></th>
+          <th>ยอดเงิน<small>Amount</small></th>
+        </tr>
+      </thead>
+      <tbody>${rows}${blankRows}</tbody>
+    </table>
+    <div class="grand">
+      <span>ยอดรวมสุทธิ / Net Total</span>
+      <strong>${baht(total)} บาท</strong>
+    </div>
+  </div>
+
+  <div class="payment">
+    <div class="head">
+      การชำระเงิน / Payment
+    </div>
+    <label>
+      <input type="radio" name="delivery-pay"
+             value="cash"
+             ${payment === "cash" ? "checked" : ""}>
+      เงินสด / Cash
+    </label>
+    <label>
+      <input type="radio" name="delivery-pay"
+             value="transfer"
+             ${payment === "transfer" ? "checked" : ""}>
+      เงินโอน / Transfer
+    </label>
+  </div>
+
+  <div class="signatures">
+    <div class="sign">
+      ลงชื่อผู้รับของ / Received by
+      <div class="line"></div>
+    </div>
+    <div class="sign">
+      วันที่รับของ / Received date
+      <div class="line"></div>
+    </div>
+  </div>
+
+  <svg class="bottom-wave" viewBox="0 0 760 60"
+       preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 23 Q380 75 760 11 L760 60 L0 60Z"
+          fill="#a8d641"/>
+    <path d="M0 41 Q360 5 760 30 L760 60 L0 60Z"
+          fill="#087337"/>
+  </svg>
+</div>
+
+</body>
+</html>`);
+
+  win.document.close();
+};
+
+// === จบใบส่งสินค้าแบบใหม่ ===
+
 function resetForm(){
 HTMLFormElement.prototype.reset.call($("productForm"));
 $("editId").value="";
