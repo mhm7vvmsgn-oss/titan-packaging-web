@@ -1914,7 +1914,9 @@ updateDeliveryNoteLock();
 
 //// TITAN PACKAGING - ใบส่งสินค้าแบบใหม่
 
-$("createDeliveryNote").onclick = () => {
+$("createDeliveryNote").onclick = () => openDeliveryNote();
+
+function openDeliveryNote(existing = null) {
   if (!validAdmin(auth?.currentUser)) {
     alert("สำหรับผู้ดูแลเท่านั้น กรุณาเข้าสู่ระบบก่อน");
     return;
