@@ -1534,65 +1534,143 @@ tbody tr:last-child{border-bottom:1px solid #087337}
 
 preview.document.close();
 
+
 const card = preview.document.querySelector(".recipient-card");
 
 if (card) {
+  const person = card.querySelector(".recipient-icon");
   const fields = card.querySelector(".recipient-fields");
 
-  if (fields) {
-    fields.style.display = "grid";
-    fields.style.gridTemplateColumns = "1.08fr 1fr";
+  if (person && fields) {
+    card.style.display = "grid";
+    card.style.gridTemplateColumns = "1fr 1fr";
+    card.style.gap = "8px";
+    card.style.border = "none";
+    card.style.overflow = "visible";
+    card.style.background = "transparent";
 
-    fields.innerHTML = `
-      <div style="
-        display:flex;
-        flex-direction:column;
-        justify-content:space-between;
-        gap:12px;
-        padding:12px 8px;
-        font-size:12px;
-        line-height:1.5;
-        overflow-wrap:anywhere;
-      ">
+    const shop = preview.document.createElement("div");
+    shop.className = "titan-shop";
+
+    shop.innerHTML = `
+      <div class="titan-store-icon">
+        <svg width="38" height="38"
+             viewBox="0 0 24 24"
+             fill="none" stroke="white"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+          <path d="M3 10L5 4H19L21 10"/>
+          <path d="M3 10V20H21V10"/>
+          <path d="M3 10C3 13 7 13 7 10
+                   C7 13 11 13 11 10
+                   C11 13 15 13 15 10
+                   C15 13 19 13 19 10
+                   C19 13 21 13 21 10"/>
+          <path d="M9 20V14H15V20"/>
+        </svg>
+      </div>
+
+      <div class="titan-shop-info">
         <div>
           <b>ร้านค้า :</b> อุปกรณ์เเพ็คกิ้งราคาโรงงาน
           <div>รับ-ส่ง พัสดุ by Titan Packaging</div>
           <div>@ท่าตำหนัก</div>
         </div>
+
         <div>
           <b>ติดต่อ :</b> โทร 0612922895
           <div>( คุณ เเอร์ )</div>
         </div>
       </div>
-
-      <div style="
-        display:flex;
-        flex-direction:column;
-        border-left:2px solid #087337;
-        min-width:0;
-        font-size:12px;
-      ">
-        <div style="
-          flex:1;
-          padding:8px;
-          border-bottom:2px solid #087337;
-        ">
-          <b>ลูกค้า :</b>
-          <div class="recipient-value"
-               contenteditable="true"
-               data-placeholder="กรอกชื่อลูกค้า"></div>
-        </div>
-
-        <div style="flex:1;padding:8px;">
-          <b>ที่อยู่ :</b>
-          <div class="recipient-value"
-               contenteditable="true"
-               data-placeholder="กรอกที่อยู่ลูกค้า"></div>
-        </div>
-      </div>
     `;
+
+    const customer = preview.document.createElement("div");
+    customer.className = "titan-customer";
+    customer.append(person, fields);
+
+    card.replaceChildren(shop, customer);
+
+    fields.querySelectorAll(".recipient-value").forEach(el => {
+      el.removeAttribute("data-placeholder");
+    });
+
+    const style = preview.document.createElement("style");
+
+    style.textContent = `
+      .titan-shop,
+      .titan-customer {
+        display: grid;
+        grid-template-columns: 23mm minmax(0, 1fr);
+        border: 2px solid #087337;
+        border-radius: 10px;
+        overflow: hidden;
+        min-width: 0;
+        min-height: 46mm;
+        background: white;
+      }
+
+      .titan-store-icon {
+        background: #087337;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .titan-shop-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 7px;
+        font-size: 11px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+
+      .titan-customer .recipient-row {
+        display: block;
+        min-height: 23mm;
+        padding: 8px;
+      }
+
+      .titan-customer .recipient-label {
+        padding-top: 0;
+      }
+
+      .titan-customer .recipient-value {
+        border: none;
+        border-radius: 0;
+        min-height: 2em;
+        padding: 3px 0;
+      }
+
+      .titan-customer .recipient-value:empty::before {
+        content: "";
+      }
+
+      @media screen and (max-width: 820px) {
+        .titan-shop,
+        .titan-customer {
+          grid-template-columns: 42px minmax(0, 1fr);
+        }
+
+        .titan-shop-info {
+          font-size: 10px;
+          padding: 8px 5px;
+        }
+
+        .titan-customer .recipient-row {
+          font-size: 10px;
+          padding: 6px;
+        }
+      }
+    `;
+
+    preview.document.head.appendChild(style);
   }
 }
+
 
 };
 
