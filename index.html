@@ -633,35 +633,106 @@ $("storeHistory").onclick = async () => {
     ));
     if (request !== historyRequest) return;
     
-    }    if (sales.length > 0) {
-      const pdfButton = document.createElement("button");
-      pdfButton.type = "button";
-      pdfButton.style.cssText =
-        "width:100%;margin:12px 0;background:#087cb8;color:white";
-      pdfButton.innerHTML =
-        "บันทึก PDF รายวัน<small>Save Daily Sales PDF</small>";
-
-      pdfButton.onclick = () => 
-        const sales = snapshot.docs.map(d => d.data())
+        const sales = snapshot.docs.map(d => ({ ...d.data(), ref: d.ref }))
       .sort((a, b) => b.soldAt.toMillis() - a.soldAt.toMillis());
-    const sum = sales.reduce((n, sale) => n + sale.total, 0);
+    const sum = sales.reduce((n, s) => n + s.total, 0);
     $("storeMessage").textContent =
       `${day} · ${sales.length} บิล · ยอดรวม ${saleMoney(sum)}`;
+
     for (const sale of sales) {
       const detail = document.createElement("details");
       const heading = document.createElement("summary");
       const stamp = sale.soldAt.toDate().toLocaleString("th-TH", {
-        timeZone: "Asia/Bangkok", dateStyle: "short", timeStyle: "short"
+        timeZone: "Asia/Bangkok"
       });
-      heading.textContent =
-        `${stamp} · ${sale.payment} · ${saleMoney(sale.total)}`;
+      heading.textContent = `${stamp} · ${sale.payment || "ไม่ระบุ"} · ${saleMoney(sale.total)}`;
       detail.append(heading);
+
       for (const item of sale.items) {
         const row = document.createElement("p");
-        row.textContent = `${item.name} ${item.color} × ${item.qty} · ${saleMoney(item.amount)}`;
+        row.textContent = `${item.name} ${item.color || ""} × ${item.qty} · ${saleMoney(item.amount)}`;
         detail.append(row);
       }
-      results.append(detail);{
+
+      const edit = document.createElement("button");
+      const remove = document.createElement("button");
+      edit.textContent = "แก้ไขบิล / Edit";
+      remove.textContent = "ลบบิล / Delete";
+
+      async function saveChange(update) {
+        if (edit.disabled || !validAdmin(auth?.currentUser)) return;
+        edit.disabled = remove.disabled = true;
+        try {
+          await runTransaction(db, async tx => {
+            const snap = await tx.get(sale.ref);
+            const now = snap.data();
+            if (!now || now.day !== day || now.payment !== sale.payment ||
+                now.total !== sale.total ||
+                JSON.stringify(now.items) !== JSON.stringify(sale.items)) {
+              throw Error("บิลเปลี่ยนแล้ว กรุณากดดูยอดย้อนหลังอีกครั้ง");
+            }
+            if (update) tx.update(sale.ref, update);
+            else tx.delete(sale.ref);
+          });
+          if (salesBox.open && request === historyRequest) $("storeHistory").click();
+        } catch (err) {
+          alert("บันทึกไม่สำเร็จ · " + err.message);
+        } finally {
+          edit.disabled = remove.disabled = false;
+        }
+      }
+
+      edit.onclick = () => {
+        const items = [];
+        for (const item of sale.items) {
+          const name = [item.name, item.color].filter(Boolean).join(" ");
+          const q = prompt(name + " — จำนวน (ใส่ 0 เพื่อเอาออก)", item.qty);
+          if (q === null) return;
+          if (!/^\d+$/.test(q.trim()) || !Number.isSafeInteger(Number(q))) {
+            return alert("กรุณาใส่จำนวนเต็ม");
+          }
+          const qty = Number(q);
+          if (!qty) continue;
+
+          const p = prompt(name + " — ราคาต่อหน่วย (บาท)", item.unitPrice);
+          if (p === null) return;
+          if (!/^\d+(\.\d{1,2})?$/.test(p.trim())) {
+            return alert("กรุณาใส่ราคาเป็นบาท เช่น 12.50");
+          }
+          const unitPrice = Number(p);
+          items.push({ ...item, qty, unitPrice, amount: Math.round(unitPrice * 100) * qty });
+        }
+
+        if (!items.length) return alert("หากต้องการลบทั้งบิล ให้กดปุ่มลบบิล");
+        const total = items.reduce((n, item) => n + item.amount, 0);
+        if (!Number.isSafeInteger(total)) return alert("ยอดสูงเกินไป กรุณาตรวจสอบอีกครั้ง");
+
+        const payment = prompt("วิธีชำระเงิน (เงินสด / เงินโอน / ไม่ระบุ)", sale.payment || "ไม่ระบุ");
+        if (payment === null) return;
+        if (!["เงินสด", "เงินโอน", "ไม่ระบุ"].includes(payment.trim())) {
+          return alert("กรุณาเลือกวิธีชำระเงินตามที่ระบุ");
+        }
+        if (confirm("บันทึกยอดใหม่ " + saleMoney(total) + " หรือไม่?")) {
+          saveChange({ items, total, payment: payment.trim() });
+        }
+      };
+
+      remove.onclick = () => {
+        if (confirm("ลบบิล " + stamp + " ยอด " + saleMoney(sale.total) + " ทั้งบิลหรือไม่?")) {
+          saveChange(null);
+        }
+      };
+
+      detail.append(edit, remove);
+      results.append(detail);
+    }
+
+    if (sales.length > 0) {
+      const pdfButton = document.createElement("button");
+      pdfButton.type = "button";
+      pdfButton.style.cssText = "width:100%;margin:12px 0;background:#087cb8;color:white";
+      pdfButton.innerHTML = "บันทึก PDF รายวัน<small>Save Daily Sales PDF</small>";
+      pdfButton.onclick = () => {
         if (!validAdmin(auth?.currentUser)) return;
 
         if ($("storeDay").value !== day) {
