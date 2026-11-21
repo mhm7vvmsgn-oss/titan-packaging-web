@@ -3394,7 +3394,27 @@ tbody tr.blank{
     }
   `;
 
-  note.head.appendChild(fixOnePage);
+  note.head.appendChild(fixOnePage);  if (lines.length <= 12) {
+    fixOnePage.textContent += `
+      @media print {
+        .paper {
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          margin: 0 auto !important;
+          overflow: visible !important;
+        }
+        .table-box,
+        .table-box table {
+          flex: none !important;
+          height: auto !important;
+        }
+        .bottom-wave {
+          margin-top: 2mm !important;
+        }
+      }
+    `;
+  }
     const badge = note.querySelector(".header .badge");
   const printButton = note.querySelector(".tools button");
   const numberLabel = note.createElement("span");
