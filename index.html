@@ -652,6 +652,79 @@ $("storeHistory").onclick = async () => {
         detail.append(row);
       }
       results.append(detail);
+    }    if (sales.length > 0) {
+      const pdfButton = document.createElement("button");
+      pdfButton.type = "button";
+      pdfButton.style.cssText =
+        "width:100%;margin:12px 0;background:#087cb8;color:white";
+      pdfButton.innerHTML =
+        "บันทึก PDF รายวัน<small>Save Daily Sales PDF</small>";
+
+      pdfButton.onclick = () => {
+        if (!validAdmin(auth?.currentUser)) return;
+
+        if ($("storeDay").value !== day) {
+          $("storeMessage").textContent =
+            "กรุณากดดูยอดย้อนหลังสำหรับวันที่ที่เลือกก่อน";
+          return;
+        }
+
+        const report = window.open("", "_blank");
+        if (!report) {
+          $("storeMessage").textContent = "กรุณาอนุญาตให้เปิดหน้าต่างรายงาน";
+          return;
+        }
+
+        const page = report.document;
+        page.open();
+        page.write(`<!doctype html>
+          <html lang="th"><head><meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>รายงานยอดขายหน้าร้าน</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm; }
+            * { box-sizing: border-box; }
+            body { margin: auto; padding: 16px; max-width: 800px;
+              font: 15px/1.5 Tahoma, Arial, sans-serif; color: #183c2c; }
+            h1 { margin: 8px 0 0; font-size: 24px; }
+            h2 { margin: 18px 0 4px; font-size: 17px;
+              border-bottom: 1px solid #246437; break-after: avoid; }
+            p { margin: 4px 0; overflow-wrap: anywhere; }
+            button { background: #087cb8; color: white; border: 0;
+              border-radius: 8px; padding: 12px 18px; font-size: 16px; }
+            @media print { button { display: none; } body { padding: 0; } }
+          </style></head><body>
+          <button type="button" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+          <h1>รายงานยอดขายหน้าร้าน</h1>
+          <p>Titan Packaging</p>
+          <main></main></body></html>`);
+        page.close();
+
+        page.title = "Titan-ยอดขายหน้าร้าน_" + day;
+        const main = page.querySelector("main");
+        const addLine = (tag, text) => {
+          const line = page.createElement(tag);
+          line.textContent = text;
+          main.append(line);
+        };
+
+        addLine("p", "วันที่สรุปยอด " + day + " · ตัดรอบ 17:00 น. เวลาไทย");
+        addLine("p", `${sales.length} บิล · ยอดรวม ${saleMoney(sum)}`);
+
+        sales.forEach((sale, index) => {
+          const stamp = sale.soldAt.toDate().toLocaleString("th-TH", {
+            timeZone: "Asia/Bangkok", dateStyle: "short", timeStyle: "short"
+          });
+          addLine("h2", `บิลที่ ${index + 1} · ${stamp} · ${sale.payment}`);
+          for (const item of sale.items) {
+            const name = [item.name, item.color].filter(Boolean).join(" ");
+            addLine("p", `${name} × ${item.qty} = ${saleMoney(item.amount)}`);
+          }
+          addLine("strong", "รวมบิล " + saleMoney(sale.total));
+        });
+      };
+
+      results.prepend(pdfButton);
     }
   } catch (error) {
     if (request === historyRequest)
