@@ -2741,6 +2741,83 @@ tbody tr.blank{
   note.head.appendChild(boxStyle);
 
   // จบการปรับกรอบร้านค้าและลูกค้า
+  
+  // ปรับตัวหนังสือร้านค้าให้ใหญ่และเต็มกรอบ
+
+  const shopText = note.querySelector(".shop-info");
+
+  if (shopText) {
+    const textStyle = note.createElement("style");
+
+    textStyle.textContent = `
+      .shop-info {
+        padding:6px 7px !important;
+        display:flex !important;
+        flex-direction:column !important;
+        justify-content:space-between !important;
+        gap:3px !important;
+        overflow:hidden !important;
+      }
+
+      .shop-info .titan-shop-details,
+      .shop-info .titan-shop-contact {
+        font-family:Tahoma,Arial,sans-serif;
+        font-size:14px;
+        line-height:1.3 !important;
+        color:#183626;
+        font-weight:500;
+        flex:0 0 auto;
+        overflow-wrap:break-word;
+        word-break:normal;
+      }
+
+      .shop-info b {
+        font-weight:800 !important;
+      }
+
+      .titan-shop-details {
+        padding-bottom:5px !important;
+        border-bottom:2px solid #087337;
+      }
+
+      .titan-shop-contact {
+        padding-top:3px !important;
+      }
+    `;
+
+    note.head.appendChild(textStyle);
+
+    const detail = shopText.querySelector(
+      ".titan-shop-details"
+    );
+
+    const contact = shopText.querySelector(
+      ".titan-shop-contact"
+    );
+
+    // เริ่มจากตัวหนังสือใหญ่ แล้วลดเฉพาะเมื่อเกินกรอบ
+    if (detail && contact) {
+      let fontSize = 14;
+
+      function applyFontSize() {
+        detail.style.fontSize = fontSize + "px";
+        contact.style.fontSize = fontSize + "px";
+      }
+
+      applyFontSize();
+
+      while (
+        shopText.scrollHeight > shopText.clientHeight + 1 &&
+        fontSize > 10.5
+      ) {
+        fontSize -= 0.5;
+        applyFontSize();
+      }
+    }
+  }
+
+  // จบการปรับขนาดตัวหนังสือร้านค้า
+
 
 
 
