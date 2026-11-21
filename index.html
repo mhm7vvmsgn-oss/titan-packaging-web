@@ -3215,7 +3215,204 @@ tbody tr.blank{
 };
 
 // === จบใบส่งสินค้าแบบใหม่ ===
+const historyButton = document.createElement("button");
+historyButton.type = "button";
+historyButton.textContent = "ประวัติใบส่งสินค้า / Delivery History";
+$("createDeliveryNote").after(historyButton);
 
+const archive = document.createElement("dialog");
+archive.style.cssText =
+  "width:min(94vw,680px);max-height:88vh;overflow:auto;" +
+  "border:0;border-radius:16px;padding:18px;box-sizing:border-box";
+archive.innerHTML = `
+  <h2>ประวัติใบส่งสินค้า<small>Delivery History</small></h2>
+  <input type="search" placeholder="ค้นหาเลขเอกสารหรือชื่อลูกค้า"
+         aria-label="ค้นหาใบส่งสินค้า">
+  <p role="status"></p>
+  <div class="documents"></div>
+  <button type="button" class="secondary">ปิด / Close</button>`;
+document.body.append(archive);
+
+const searchNotes = archive.querySelector("input");
+const archiveStatus = archive.querySelector("[role=status]");
+const documentList = archive.querySelector(".documents");
+archive.querySelector(".secondary").onclick = () => archive.close();
+
+let archivedNotes = [];
+let stopArchive = null;
+
+archive.addEventListener("close", () => {
+  stopArchive?.();
+  stopArchive = null;
+  archivedNotes = [];
+  documentList.replaceChildren();
+});
+
+historyButton.onclick = () => {
+  if (!validAdmin(auth?.currentUser)) {
+    alert("กรุณาเข้าสู่ระบบแอดมินก่อน");
+    return;
+  }
+  searchNotes.value = "";
+  archive.showModal();
+  archiveStatus.textContent = "กำลังโหลดใบส่งสินค้า…";
+  stopArchive = onSnapshot(collection(db, "deliveryNotes"), snapshot => {
+    archivedNotes = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+    archivedNotes.sort((a, b) => b.number.localeCompare(a.number, "en", {
+      numeric: true
+    }));
+    showArchivedNotes();
+  }, error => {
+    archiveStatus.textContent = "เปิดประวัติไม่สำเร็จ · " + error.code;
+  });
+};
+
+searchNotes.oninput = showArchivedNotes;
+
+function showArchivedNotes() {
+  const term = searchNotes.value.trim().toLowerCase();
+  const matches = archivedNotes.filter(n =>
+    `${n.number} ${n.customer || ""}`.toLowerCase().includes(term)
+  );
+  archiveStatus.textContent = `พบ ${matches.length} ใบ`;
+  documentList.replaceChildren();
+
+  for (const n of matches) {
+    const row = document.createElement("section");
+    row.style.cssText = "border-top:1px solid #d9e4dd;padding:12px 0";
+    const title = document.createElement("strong");
+    title.textContent = `${n.number} · ${n.customer || "ไม่ระบุชื่อลูกค้า"}`;
+    const amount = document.createElement("p");
+    amount.textContent = Number(n.total).toLocaleString("th-TH", {
+      style: "currency", currency: "THB"
+    });
+    row.append(title, amount);
+
+    function action(label, handler) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.style.margin = "2px";
+      button.onclick = handler;
+      row.append(button);
+    }
+
+    action("เปิด / บันทึก PDF", () => openDeliveryNote(n));
+    action("แก้ไข", () => editArchivedNote(n));
+    action("ลบ", async event => {
+      if (!confirm(`ลบใบส่งสินค้า ${n.number} ถาวรหรือไม่?`)) return;
+      event.currentTarget.disabled = true;
+      try {
+        await deleteDoc(doc(db, "deliveryNotes", n.id));
+      } catch (error) {
+        archiveStatus.textContent = "ลบไม่สำเร็จ · " + error.code;
+        showDeleteError(error);
+      }
+      function showDeleteError(error) {
+        alert("ลบใบส่งสินค้าไม่สำเร็จ · " + error.code);
+        showArchivedNotes();
+      }
+    });
+
+    documentList.append(row);
+  }
+}
+
+function editArchivedNote(n) {
+  const editor = document.createElement("dialog");
+  editor.style.cssText = archive.style.cssText;
+  const form = document.createElement("form");
+  const heading = document.createElement("h3");
+  heading.textContent = "แก้ไขใบส่งสินค้า " + n.number;
+  form.append(heading);
+
+  function field(parent, label, value, type = "text") {
+    const wrap = document.createElement("label");
+    wrap.style.cssText = "display:block;margin:8px 0";
+    wrap.append(label);
+    const input = document.createElement(type === "textarea" ? "textarea" : "input");
+    if (input.tagName === "INPUT") input.type = type;
+    input.value = value ?? "";
+    wrap.append(input);
+    parent.append(wrap);
+    return input;
+  }
+
+  const customer = field(form, "ลูกค้า", n.customer);
+  const address = field(form, "ที่อยู่", n.address, "textarea");
+  const payment = document.createElement("select");
+  payment.setAttribute("aria-label", "วิธีชำระเงิน");
+  for (const [value, label] of [
+    ["", "ไม่ระบุวิธีชำระเงิน"], ["cash", "เงินสด"], ["transfer", "เงินโอน"]
+  ]) payment.add(new Option(label, value));
+  payment.value = n.payment || "";
+  form.append(payment);
+
+  const rows = document.createElement("div");
+  form.append(rows);
+
+  function addItem(item = { name: "", qty: 1, price: 0 }) {
+    const line = document.createElement("fieldset");
+    const name = field(line, "สินค้า", item.name);
+    const qty = field(line, "จำนวน", item.qty, "number");
+    const price = field(line, "ราคาต่อหน่วย", item.price, "number");
+    name.required = qty.required = price.required = true;
+    qty.min = "1";
+    qty.step = "1";
+    price.min = "0";
+    price.step = "0.01";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "เอารายการนี้ออก";
+    remove.onclick = () => line.remove();
+    line.append(remove);
+    rows.append(line);
+  }
+
+  n.items.forEach(addItem);
+  const add = document.createElement("button");
+  add.type = "button";
+  add.textContent = "+ เพิ่มสินค้า";
+  add.onclick = () => addItem();
+  const save = document.createElement("button");
+  save.type = "submit";
+  save.textContent = "บันทึกการแก้ไข";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "ยกเลิก";
+  cancel.onclick = () => editor.close();
+  form.append(add, save, cancel);
+  editor.append(form);
+  document.body.append(editor);
+  editor.onclose = () => editor.remove();
+  editor.showModal();
+
+  form.onsubmit = async event => {
+    event.preventDefault();
+    if (save.disabled) return;
+    const items = [...rows.children].map(line => {
+      const [name, qty, price] = line.querySelectorAll("input");
+      return { name: name.value.trim(), qty: Number(qty.value),
+               price: Number(price.value) };
+    });
+    if (!items.length || items.some(i => !i.name)) {
+      alert("กรุณาระบุชื่อสินค้าอย่างน้อยหนึ่งรายการ และกรอกชื่อให้ครบ");
+      return;
+    }
+    save.disabled = true;
+    try {
+      await updateDoc(doc(db, "deliveryNotes", n.id), {
+        customer: customer.value.trim(), address: address.value.trim(),
+        payment: payment.value, items,
+        total: items.reduce((sum, i) => sum + Math.round(i.price * 100) * i.qty, 0) / 100
+      });
+      editor.close();
+    } catch (error) {
+      alert("บันทึกไม่สำเร็จ · " + error.code);
+      save.disabled = false;
+    }
+  };
+}
 function resetForm(){
 HTMLFormElement.prototype.reset.call($("productForm"));
 $("editId").value="";
