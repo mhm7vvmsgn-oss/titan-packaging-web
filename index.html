@@ -2954,7 +2954,8 @@ tbody tr.blank{
       win.print();
     } catch (error) {
       console.error(error);
-      win.alert("บันทึกใบส่งสินค้าไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตและสิทธิ์บันทึกใน Firebase แล้วลองอีกครั้ง");
+            const reason = error.code || error.message || "ไม่ทราบสาเหตุ";
+      printButton.textContent = "บันทึกไม่สำเร็จ · " + reason + " · แตะเพื่อลองใหม่";("บันทึกใบส่งสินค้าไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตและสิทธิ์บันทึกใน Firebase แล้วลองอีกครั้ง");
     } finally {
       printButton.disabled = false;
     }
