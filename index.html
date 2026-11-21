@@ -495,7 +495,169 @@ p:products.find(x=>x.id===id)
 e.p&&canView(e.p)&&Number.isFinite(e.qty)&&e.qty>0
 );
 }
+const saleMenu = document.createElement("button");
+saleMenu.type = "button";
+saleMenu.style.cssText =
+  "grid-column:1/-1;background:#087cb8;color:white;width:100%";
+saleMenu.innerHTML =
+  "บันทึกรายการขายหน้าร้าน<small>Store Sales</small>";
+$("clear").after(saleMenu);
 
+const salesBox = document.createElement("dialog");
+salesBox.style.cssText =
+  "width:min(92vw,480px);max-height:85vh;overflow:auto;" +
+  "box-sizing:border-box;border:0;border-radius:16px;padding:20px";
+salesBox.innerHTML = `
+  <h2>รายการขายหน้าร้าน<small>Store Sales</small></h2>
+  <p id="storeCartPreview"></p>
+  <button type="button" id="storeSave" style="background:#087cb8;width:100%">
+    บันทึกจากตะกร้า<small>Save Cart as Sale</small>
+  </button>
+  <hr>
+  <label for="storeDay">วันที่สรุปยอด / Sales Date</label>
+  <input type="date" id="storeDay">
+  <button type="button" id="storeHistory">
+    ดูยอดย้อนหลัง<small>Sales History</small>
+  </button>
+  <p id="storeMessage" role="status"></p>
+  <div id="storeResults"></div>
+  <button type="button" id="storeClose" class="secondary">
+    ปิด<small>Close</small>
+  </button>`;
+document.body.append(salesBox);
+
+const saleMoney = amount =>
+  (amount / 100).toLocaleString("th-TH", {
+    style: "currency", currency: "THB"
+  });
+
+function saleDay(time) {
+  const thai = new Date(time.getTime() + 7 * 3600000);
+  const seconds = thai.getUTCHours() * 3600 +
+    thai.getUTCMinutes() * 60 + thai.getUTCSeconds();
+  if (seconds > 17 * 3600) thai.setUTCDate(ThaiDayPlusOne(thai));
+  return thai.toISOString().slice(0, 10);
+}
+
+function ThaiDayPlusOne(date) {
+  return date.getUTCDate() + 1;
+}
+
+function currentSale() {
+  const items = entries().map(({ p, color, qty }) => ({
+    name: p.name,
+    color: color || "",
+    qty,
+    unitPrice: Number(p.price),
+    amount: Math.round(Number(p.price) * qty * 100)
+  }));
+  return {
+    items,
+    payment: document.querySelector(
+      'input[name="titan-checkout-method"]:checked'
+    )?.value === "transfer" ? "เงินโอน" : "เงินสด",
+    total: items.reduce((sum, item) => sum + item.amount, 0)
+  };
+}
+
+let busySaving = false;
+let savedInMenu = false;
+let historyRequest = 0;
+
+saleMenu.onclick = () => {
+  if (!validAdmin(auth?.currentUser)) {
+    alert("กรุณาเข้าสู่ระบบแอดมินก่อน");
+    return;
+  }
+  const sale = currentSale();
+  savedInMenu = false;
+  $("storeCartPreview").textContent =
+    `ตะกร้า ${sale.items.length} รายการ · ${sale.payment} · ${saleMoney(sale.total)}`;
+  $("storeSave").disabled = !sale.items.length;
+  $("storeDay").value = saleDay(new Date());
+  $("storeMessage").textContent = "";
+  $("storeResults").replaceChildren();
+  salesBox.showModal();
+};
+
+$("storeClose").onclick = () => {
+  if (!busySaving) salesBox.close();
+};
+salesBox.addEventListener("cancel", event => {
+  if (busySaving) event.preventDefault();
+});
+salesBox.addEventListener("close", () => { historyRequest++; });
+
+$("storeSave").onclick = async () => {
+  if (busySaving || savedInMenu || !validAdmin(auth?.currentUser)) return;
+  const sale = currentSale();
+  if (!sale.items.length) return;
+  if (prompt("ใส่ PIN เพื่อบันทึกยอดขาย") !== "1234") {
+    $("storeMessage").textContent = "ยังไม่ได้บันทึก กรุณาตรวจ PIN";
+    return;
+  }
+  const now = new Date();
+  const day = saleDay(now);
+  busySaving = true;
+  $("storeSave").disabled = true;
+  $("storeMessage").textContent = "กำลังบันทึกรายการขาย…";
+  try {
+    await addDoc(collection(db, "storeSales"), {
+      ...sale, day, soldAt: now, createdAt: serverTimestamp()
+    });
+    savedInMenu = true;
+    $("storeDay").value = day;
+    $("storeMessage").textContent =
+      `บันทึกแล้ว ${saleMoney(sale.total)} · รอบวันที่ ${day}`;
+  } catch (error) {
+    $("storeMessage").textContent = "บันทึกไม่สำเร็จ · " + error.code;
+  } finally {
+    busySaving = false;
+    $("storeSave").disabled = savedInMenu;
+  }
+};
+
+$("storeHistory").onclick = async () => {
+  const day = $("storeDay").value;
+  if (!day || !validAdmin(auth?.currentUser)) return;
+  const request = ++historyRequest;
+  const results = $("storeResults");
+  results.replaceChildren();
+  $("storeMessage").textContent = "กำลังโหลดรายการขาย…";
+  try {
+    const { query, where, getDocs } = await import(
+      "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"
+    );
+    const snapshot = await getDocs(query(
+      collection(db, "storeSales"), where("day", "==", day)
+    ));
+    if (request !== historyRequest) return;
+    const sales = snapshot.docs.map(d => d.data())
+      .sort((a, b) => b.soldAt.toMillis() - a.soldAt.toMillis());
+    const sum = sales.reduce((n, sale) => n + sale.total, 0);
+    $("storeMessage").textContent =
+      `${day} · ${sales.length} บิล · ยอดรวม ${saleMoney(sum)}`;
+    for (const sale of sales) {
+      const detail = document.createElement("details");
+      const heading = document.createElement("summary");
+      const stamp = sale.soldAt.toDate().toLocaleString("th-TH", {
+        timeZone: "Asia/Bangkok", dateStyle: "short", timeStyle: "short"
+      });
+      heading.textContent =
+        `${stamp} · ${sale.payment} · ${saleMoney(sale.total)}`;
+      detail.append(heading);
+      for (const item of sale.items) {
+        const row = document.createElement("p");
+        row.textContent = `${item.name} ${item.color} × ${item.qty} · ${saleMoney(item.amount)}`;
+        detail.append(row);
+      }
+      results.append(detail);
+    }
+  } catch (error) {
+    if (request === historyRequest)
+      $("storeMessage").textContent = "ดูย้อนหลังไม่สำเร็จ · " + error.code;
+  }
+};
 function renderCart(){
 const rows=entries();
 let sum=0;
