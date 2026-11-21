@@ -50,7 +50,10 @@ nav button.active{background:white;color:#166534}
 .flying-product{position:fixed;z-index:40;pointer-events:none;font-size:28px}
 @media(min-width:700px){.categories{grid-template-columns:repeat(4,1fr)}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
-</style>
+body:not(:has(#loginPanel.hidden)) #createDeliveryNote,
+body:not(:has(#loginPanel.hidden)) .admin-sale-button {
+  display: none !important;
+}</style>
 </head>
 <body>
 
@@ -3488,6 +3491,9 @@ const historyButton = document.createElement("button");
 historyButton.type = "button";
 historyButton.textContent = "ประวัติใบส่งสินค้า / Delivery History";
 $("createDeliveryNote").after(historyButton);
+  for (const button of [historyButton, saleMenu, jpgMenu]) {
+  button.classList.add("admin-sale-button");
+}
 
 const archive = document.createElement("dialog");
 archive.style.cssText =
