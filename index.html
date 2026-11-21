@@ -2601,6 +2601,147 @@ tbody tr.blank{
   }
 
   // จบระบบปรับขนาด A4 อัตโนมัติ
+  
+  // ปรับกรอบร้านค้าและลูกค้าให้ตรงแบบ
+
+  const shopBox = note.querySelector(".shop-info");
+
+  if (shopBox) {
+    shopBox.innerHTML = `
+      <div class="titan-shop-details">
+        <b>ร้านค้า :</b> อุปกรณ์แพ็คกิ้งราคาโรงงาน
+        <div>รับ-ส่ง พัสดุ by Titan Packaging</div>
+        <div>@ท่าตำหนัก</div>
+      </div>
+
+      <div class="titan-shop-contact">
+        <b>ติดต่อ :</b> โทร 0612922895
+        <div>( คุณ แอร์ )</div>
+      </div>
+    `;
+  }
+
+  const customerBox = note.querySelector(".recipient-fields");
+
+  if (customerBox) {
+    customerBox.innerHTML = `
+      <div class="titan-fill-row">
+        <b>ลูกค้า :</b>
+        <span
+          class="titan-name-line"
+          contenteditable="true"
+          role="textbox"
+          aria-label="ชื่อลูกค้า"
+        ></span>
+      </div>
+
+      <div class="titan-fill-row titan-address-row">
+        <b>ที่อยู่ :</b>
+        <div
+          class="titan-address-lines"
+          contenteditable="true"
+          role="textbox"
+          aria-label="ที่อยู่ลูกค้า"
+          aria-multiline="true"
+        ></div>
+      </div>
+    `;
+  }
+
+  const boxStyle = note.createElement("style");
+
+  boxStyle.textContent = `
+    .shop-info {
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      min-width:0;
+      padding:6px 5px;
+      overflow:hidden;
+    }
+
+    .titan-shop-details {
+      font-size:10px;
+      line-height:1.3;
+      overflow-wrap:anywhere;
+      border-bottom:2px solid #087337;
+      padding-bottom:4px;
+    }
+
+    .titan-shop-contact {
+      font-size:10px;
+      line-height:1.3;
+      padding-top:4px;
+      overflow-wrap:anywhere;
+    }
+
+    .recipient-fields {
+      display:grid;
+      grid-template-rows:45% 55%;
+      min-width:0;
+      padding:0;
+    }
+
+    .titan-fill-row {
+      display:grid;
+      grid-template-columns:58px minmax(0,1fr);
+      gap:5px;
+      align-items:start;
+      min-width:0;
+      padding:8px 10px 0;
+    }
+
+    .titan-fill-row b {
+      font-size:15px;
+      white-space:nowrap;
+      color:#183626;
+    }
+
+    .titan-name-line {
+      display:block;
+      min-height:28px;
+      padding:2px 0;
+      border-bottom:2px solid #087337;
+      outline:none;
+      font-size:14px;
+      line-height:23px;
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
+    }
+
+    .titan-address-row {
+      padding-top:1px;
+    }
+
+    .titan-address-lines {
+      min-height:64px;
+      outline:none;
+      font-size:14px;
+      line-height:32px;
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
+      background-image:repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 30px,
+        #087337 30px,
+        #087337 32px
+      );
+    }
+
+    @media print {
+      .titan-name-line,
+      .titan-address-lines {
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+    }
+  `;
+
+  note.head.appendChild(boxStyle);
+
+  // จบการปรับกรอบร้านค้าและลูกค้า
+
 
 
 };
