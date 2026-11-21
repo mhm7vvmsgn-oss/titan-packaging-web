@@ -238,7 +238,7 @@ aria-live="polite"></div>
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {
 getFirestore,collection,onSnapshot,addDoc,
-updateDoc,deleteDoc,doc,serverTimestamp
+updateDoc,deleteDoc,doc,serverTimestamp,runTransaction
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {
 getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut
@@ -2925,9 +2925,7 @@ tbody tr.blank{
     printButton.disabled = true;
         printButton.textContent = "กำลังบันทึกใบส่งสินค้า…";
     try {
-      const { doc, runTransaction } = await import(
-        "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"
-      );
+            printButton.textContent = "กำลังขอเลขเอกสารจาก Firebase…";
       const counter = doc(db, "deliveryCounters", prefix);
       const delivery = doc(collection(db, "deliveryNotes"));
 
