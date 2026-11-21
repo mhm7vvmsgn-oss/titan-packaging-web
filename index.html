@@ -1922,9 +1922,7 @@ function openDeliveryNote(existing = null) {
     return;
   }
 
-  $("createDeliveryNote").onclick = () => openDeliveryNote();
-
-function openDeliveryNote(existing = null) {
+    const lines = existing?.items ?? entries().map(e => ({
     name: e.p.name + (e.color ? " (สี" + e.color + ")" : ""),
     qty: Number(e.qty),
     price: Number(e.p.price)
@@ -1946,9 +1944,9 @@ function openDeliveryNote(existing = null) {
     maximumFractionDigits: 2
   });
 
-  $("createDeliveryNote").onclick = () => openDeliveryNote();
-
-function openDeliveryNote(existing = null) {
+    const noteDate = existing?.date?.toDate?.() || new Date();
+  const today = noteDate.toLocaleDateString("th-TH", {
+    timeZone: "Asia/Bangkok",
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
@@ -3215,6 +3213,7 @@ tbody tr.blank{
         tx.set(delivery, {
           number,
           date: deliveryDate,
+                    payment: note.querySelector('input[name="delivery-pay"]:checked')?.value || "",
           customer: note.querySelector(".titan-name-line").innerText.trim(),
           address: note.querySelector(".titan-address-lines").innerText.trim(),
           items: lines,
