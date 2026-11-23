@@ -807,52 +807,102 @@ $("storeHistory").onclick = async () => {
         }
 
         const page = report.document;
-        page.open();
-        page.write(`<!doctype html>
-          <html lang="th"><head><meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>รายงานยอดขายหน้าร้าน</title>
-          <style>
-            @page { size: A4 portrait; margin: 12mm; }
-            * { box-sizing: border-box; }
-            body { margin: auto; padding: 16px; max-width: 800px;
-              font: 15px/1.5 Tahoma, Arial, sans-serif; color: #183c2c; }
-            h1 { margin: 8px 0 0; font-size: 24px; }
-            h2 { margin: 18px 0 4px; font-size: 17px;
-              border-bottom: 1px solid #246437; break-after: avoid; }
-            p { margin: 4px 0; overflow-wrap: anywhere; }
-            button { background: #087cb8; color: white; border: 0;
-              border-radius: 8px; padding: 12px 18px; font-size: 16px; }
-            @media print { button { display: none; } body { padding: 0; } }
-          </style></head><body>
-          <button type="button" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
-          <h1>รายงานยอดขายหน้าร้าน</h1>
-          <p>Titan Packaging</p>
-          <main></main></body></html>`);
-        page.close();
+page.open();
+page.write(`<!doctype html>
+<html lang="th"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>รายงานยอดขายหน้าร้าน</title>
+<style>
+@page{size:A4 portrait;margin:10mm}
+*{box-sizing:border-box}
+body{font:12px/1.5 Tahoma,Arial,sans-serif;color:#263238;margin:0 auto;padding:14px;max-width:850px}
+h1{text-align:center;font-size:20px;margin:0}
+.subtitle{text-align:center;color:#64748b;margin:5px 0 15px}
+.columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.column{border:1px solid #dce3e9;border-radius:9px;padding:9px;min-width:0}
+.column h2{text-align:center;font-size:16px;margin:3px 0 12px}
+.bill{padding:9px 0;border-bottom:1px solid #e5e7eb;break-inside:avoid}
+.billhead{font-weight:bold}
+.item{display:flex;justify-content:space-between;gap:7px;margin-top:5px}
+.item span:first-child{min-width:0;overflow-wrap:anywhere}
+.item span:last-child{white-space:nowrap}
+.billtotal{text-align:right;font-weight:bold;margin-top:7px}
+.subtotal{border-top:2px solid #334155;padding-top:10px;margin-top:12px;font-weight:bold;font-size:14px;text-align:center}
+.grand{margin-top:16px;padding:12px;border:1px solid #dce3e9;border-radius:9px;text-align:center}
+.grand strong{display:block;font-size:23px;color:#16804a}
+.actions{text-align:center;margin-bottom:15px}
+button{padding:11px 18px;border:0;border-radius:8px;background:#087cb8;color:white;font-size:15px}
+@media print{body{padding:0}.actions{display:none}}
+</style></head><body>
+<div class="actions"><button onclick="window.print()">พิมพ์ / บันทึก PDF</button></div>
+<h1>TITAN PACKAGING</h1>
+<div class="subtitle">รายงานยอดขายหน้าร้าน<br>วันที่ ${day} · ตัดรอบ 17:00 น.</div>
+<div class="columns">
+<section class="column"><h2>เงินสด</h2><div id="cash"></div><div class="subtotal" id="cashTotal"></div></section>
+<section class="column"><h2>เงินโอน</h2><div id="transfer"></div><div class="subtotal" id="transferTotal"></div></section>
+</div>
+<div class="grand">ยอดขายรวมทั้งหมด<strong id="grandTotal"></strong><span id="billCount"></span></div>
+</body></html>`);
+page.close();
+page.title = "Titan-ยอดขายหน้าร้าน_" + day;
 
-        page.title = "Titan-ยอดขายหน้าร้าน_" + day;
-        const main = page.querySelector("main");
-        const addLine = (tag, text) => {
-          const line = page.createElement(tag);
-          line.textContent = text;
-          main.append(line);
-        };
+const cashBox = page.getElementById("cash");
+const transferBox = page.getElementById("transfer");
+let cashTotal = 0;
+let transferTotal = 0;
+let unknownTotal = 0;
 
-        addLine("p", "วันที่สรุปยอด " + day + " · ตัดรอบ 17:00 น. เวลาไทย");
-        addLine("p", `${sales.length} บิล · ยอดรวม ${saleMoney(sum)}`);
+function addReportText(parent, className, value) {
+  const el = page.createElement("div");
+  el.className = className;
+  el.textContent = value;
+  parent.append(el);
+  return el;
+}
 
-        sales.forEach((sale, index) => {
-          const stamp = sale.soldAt.toDate().toLocaleString("th-TH", {
-            timeZone: "Asia/Bangkok", dateStyle: "short", timeStyle: "short"
-          });
-          addLine("h2", `บิลที่ ${index + 1} · ${stamp} · ${sale.payment}`);
-          for (const item of sale.items) {
-            const name = [item.name, item.color].filter(Boolean).join(" ");
-            addLine("p", `${name} × ${item.qty} = ${saleMoney(item.amount)}`);
-          }
-          addLine("strong", "รวมบิล " + saleMoney(sale.total));
-        });
+sales.forEach(sale => {
+  const isCash = sale.payment === "เงินสด";
+  const isTransfer = sale.payment === "เงินโอน";
+  if (!isCash && !isTransfer) {
+    unknownTotal += Number(sale.total) || 0;
+    return;
+  }
+  const target = isCash ? cashBox : transferBox;
+  if (isCash) cashTotal += Number(sale.total) || 0;
+  else transferTotal += Number(sale.total) || 0;
+
+  const bill = page.createElement("div");
+  bill.className = "bill";
+  const time = sale.soldAt.toDate().toLocaleTimeString("th-TH", {
+    timeZone:"Asia/Bangkok",hour:"2-digit",minute:"2-digit"
+  });
+  addReportText(bill,"billhead",time+" น. · "+saleMoney(sale.total));
+  for (const item of (sale.items || [])) {
+    const row = page.createElement("div");
+    row.className = "item";
+    const name = page.createElement("span");
+    name.textContent = [item.name,item.color].filter(Boolean).join(" ")+" × "+item.qty;
+    const price = page.createElement("span");
+    price.textContent = saleMoney(item.amount);
+    row.append(name,price);
+    bill.append(row);
+  }
+  addReportText(bill,"billtotal","รวมบิล "+saleMoney(sale.total));
+  target.append(bill);
+});
+
+if (!cashBox.children.length) addReportText(cashBox,"item","ไม่มีรายการเงินสด");
+if (!transferBox.children.length) addReportText(transferBox,"item","ไม่มีรายการเงินโอน");
+page.getElementById("cashTotal").textContent = "รวมเงินสด "+saleMoney(cashTotal);
+page.getElementById("transferTotal").textContent = "รวมเงินโอน "+saleMoney(transferTotal);
+page.getElementById("grandTotal").textContent = saleMoney(sum);
+page.getElementById("billCount").textContent = "ทั้งหมด "+sales.length+" บิล";
+if (unknownTotal) {
+  const warning = page.createElement("p");
+  warning.textContent = "ยอดไม่ระบุวิธีชำระเงิน: "+saleMoney(unknownTotal);
+  page.querySelector(".grand").append(warning);
+}
       };
 
       results.prepend(pdfButton);
