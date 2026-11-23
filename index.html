@@ -646,7 +646,7 @@ $("storeSave").onclick = async () => {
   if (busySaving || savedInMenu || !validAdmin(auth?.currentUser)) return;
   const sale = currentSale();
   if (!sale.items.length) return;
-  $("storeSave").onclick = async () => {
+  
   if (prompt("ใส่ PIN เพื่อบันทึกยอดขาย") !== "1234") {
     $("storeMessage").textContent = "ยังไม่ได้บันทึก กรุณาตรวจ PIN";
     return;
