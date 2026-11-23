@@ -1260,7 +1260,7 @@ titanSlipInput.onchange = () => {
     file ? "✓ แนบสลิปแล้ว · " + file.name : "ยังไม่ได้แนบสลิป";
 };
 
-$("download").before(slipMenu, titanSlipInput);
+$("download").closest(".actions").before(slipMenu, titanSlipInput);
   $("download").onclick = async () => {
   const items = entries();
   if (!items.length) {
