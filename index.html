@@ -5310,5 +5310,138 @@ area.style.display = "none";
   #categories [data-cat="mailer"] > span:first-child  { background-position: right center; }
   #categories [data-cat="other"] > span:first-child   { background-position: left bottom; }
   #categories [data-cat="special"] > span:first-child { background-position: right bottom; }
-</style></body>
+</style>
+<style>
+/* Titan Packaging - Mobile Payment Layout */
+#titan-checkout {
+  padding: 16px !important;
+  border-radius: 20px !important;
+  background: #f0f8f2 !important;
+  overflow: hidden;
+}
+
+#titan-checkout h3 {
+  color: #10482d;
+  font-size: 23px;
+  margin-bottom: 16px;
+}
+
+#titan-checkout label {
+  box-sizing: border-box;
+  width: calc(50% - 6px);
+  min-width: 0;
+  display: inline-flex !important;
+  vertical-align: top;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 8px !important;
+  min-height: 85px;
+  margin: 0 3px 14px !important;
+  border: 2px solid #b9d9c5;
+  border-radius: 15px !important;
+  background: white;
+  font-size: clamp(12px, 3.4vw, 16px);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+#titan-checkout label:has(input:checked) {
+  background: #e1f5e7;
+  border-color: #15803d;
+}
+
+#titan-checkout input[type="radio"] {
+  flex: 0 0 auto;
+  width: 21px !important;
+  height: 21px;
+}
+
+#titan-new-qr {
+  clear: both;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 18px 12px !important;
+  background: white;
+  border-radius: 18px;
+  text-align: center;
+}
+
+#titan-new-qr img {
+  width: min(100%, 280px) !important;
+  max-width: 280px !important;
+  height: auto !important;
+  margin: 14px auto !important;
+}
+
+#titan-new-qr p {
+  max-width: 100%;
+  width: auto !important;
+  overflow-wrap: break-word;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#titan-account-warning {
+  margin: 16px 0;
+  padding: 16px 12px;
+  background: #dc1717;
+  border-radius: 14px;
+  color: white;
+  text-align: center;
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+#titan-account-warning .account-name {
+  display: block;
+  margin-top: 4px;
+  word-spacing: 4px;
+}
+
+@media (max-width: 390px) {
+  #titan-checkout label {
+    font-size: 12px;
+    padding: 10px 5px !important;
+  }
+}
+</style>
+
+<script>
+(() => {
+  const checkout = document.getElementById("titan-checkout");
+  const qr = document.getElementById("titan-new-qr");
+  if (!checkout || !qr) return;
+
+  const warning = document.createElement("div");
+  warning.id = "titan-account-warning";
+
+  const heading = document.createElement("div");
+  heading.textContent = "⚠️ กรุณาโอนเงิน ชื่อบัญชี";
+
+  const name = document.createElement("span");
+  name.className = "account-name";
+  name.textContent = "นายกฤชณนณ์ จิวเจริญ เท่านั้น";
+
+  warning.append(heading, name);
+  qr.append(warning);
+
+  const updateWarning = () => {
+    const transfer = checkout.querySelector(
+      'input[name="titan-checkout-method"][value="transfer"]'
+    );
+    warning.hidden = !transfer?.checked;
+  };
+
+  checkout.querySelectorAll(
+    'input[name="titan-checkout-method"]'
+  ).forEach(input => {
+    input.addEventListener("change", updateWarning);
+  });
+
+  updateWarning();
+})();
+</script>
+</body>
 </html>
