@@ -54,6 +54,38 @@ body:not(:has(#loginPanel.hidden)) #createDeliveryNote,
 body:not(:has(#loginPanel.hidden)) .admin-sale-button {
   display: none !important;
 }</style>
+  <style>
+  button[data-camera],
+  button[data-upload] {
+    padding: 6px 8px;
+    line-height: 1.35;
+  }
+
+  button[data-camera] {
+    background: #edf7ef !important;
+    color: #185a32 !important;
+    border: 1px solid #b8d7c0 !important;
+  }
+
+  button[data-upload] {
+    background: #fff8e8 !important;
+    color: #654c20 !important;
+    border: 1px solid #e5d6af !important;
+  }
+
+  button[data-camera] strong,
+  button[data-upload] strong {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  button[data-camera] small,
+  button[data-upload] small {
+    font-size: 11px;
+    margin-top: 2px;
+    opacity: 1;
+  }
+</style>
 </head>
 <body>
 
