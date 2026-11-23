@@ -4492,7 +4492,100 @@ document.querySelector("#titan-sales-dialog p:not([id])").hidden = false;
   const qrArea = document.getElementById(
     "titan-qr-area"
   );
+  const totalLabel = document.getElementById("total");
+  const qrPicture = qrArea.querySelector("img");
+  const qrCaption = qrArea.querySelector("p");
+  const originalQR = qrPicture.src;
+  let qrTools;
+  let qrVersion = 0;
 
+  function paymentCRC(text) {
+    let crc = 0xffff;
+    for (const byte of new TextEncoder().encode(text)) {
+      crc ^= byte << 8;
+      for (let bit = 0; bit < 8; bit++) {
+        crc = ((crc << 1) ^ ((crc & 0x8000) ? 0x1021 : 0)) & 0xffff;
+      }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, "0");
+  }
+
+  async function loadPaymentQR() {
+    const [{ default: readQR }, { default: makeQR }] = await Promise.all([
+      import("https://esm.sh/jsqr@1.4.0"),
+      import("https://esm.sh/qrcode@1.5.4")
+    ]);
+
+    const source = new Image();
+    source.src = originalQR;
+    await source.decode();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = source.naturalWidth;
+    canvas.height = source.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(source, 0, 0);
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = readQR(pixels.data, pixels.width, pixels.height)?.data;
+
+    // ตรวจรูปแบบและรหัสตรวจสอบของ QR ร้านก่อนใช้ข้อมูลผู้รับ
+    if (!data || !/^00020101021129\d{2}0016A000000677010111/.test(data)
+        || !/53037645802TH6304[0-9A-F]{4}$/i.test(data)
+        || paymentCRC(data.slice(0, -4)) !== data.slice(-4).toUpperCase()) {
+      throw new Error("อ่าน QR พร้อมเพย์ของร้านไม่ได้");
+    }
+    return { data, makeQR };
+  }
+
+  async function refreshPaymentQR() {
+    const version = ++qrVersion;
+    qrPicture.style.display = "none";
+    if (qrArea.hidden) return;
+
+    const amount = totalLabel.textContent.replace(/[฿,\s]/g, "");
+    if (!/^\d+(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0) {
+      qrCaption.textContent = "กรุณาเพิ่มสินค้าในตะกร้าก่อน";
+      return;
+    }
+
+    qrCaption.textContent = "กำลังสร้าง QR ตามยอดตะกร้า…";
+    try {
+      qrTools ??= loadPaymentQR().catch(error => {
+        qrTools = undefined;
+        throw error;
+      });
+      const { data, makeQR } = await qrTools;
+      if (version !== qrVersion) return;
+
+      const value = Number(amount).toFixed(2);
+      const amountField = "54" + String(value.length).padStart(2, "0") + value;
+      const body = data.slice(0, -4)
+        .replace(/^000201010211/, "000201010212")
+        .replace(/5802TH6304$/, amountField + "5802TH6304");
+      const url = await makeQR.toDataURL(body + paymentCRC(body), {
+        width: 360, margin: 4, errorCorrectionLevel: "M"
+      });
+      if (version !== qrVersion) return;
+
+      qrPicture.src = url;
+      qrPicture.alt = "QR พร้อมเพย์ " + value + " บาท";
+      qrPicture.style.display = "block";
+      qrCaption.textContent = "ยอดชำระ " + value + " บาท";
+    } catch {
+      if (version === qrVersion) {
+        qrCaption.textContent = "สร้าง QR ไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วเลือกเงินโอนอีกครั้ง";
+      }
+    }
+  }
+
+  const paymentQRObserver = new MutationObserver(refreshPaymentQR);
+  paymentQRObserver.observe(totalLabel, {
+    childList: true, characterData: true, subtree: true
+  });
+  paymentQRObserver.observe(qrArea, {
+    attributes: true, attributeFilter: ["hidden"]
+  });
+  refreshPaymentQR();
   const cash = extra.querySelector(
     'input[value="cash"]'
   );
