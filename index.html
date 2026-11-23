@@ -612,10 +612,7 @@ function currentSale() {
 
 let busySaving = false;
 let savedInMenu = false;
-  let busySaving = false;
-let savedInMenu = false;
 let lastSavedSaleSignature = null;
-let historyRequest = 0;
 let historyRequest = 0;
 
 saleMenu.onclick = () => {
@@ -661,8 +658,6 @@ $("storeSave").onclick = async () => {
       ...sale, day, soldAt: now, createdAt: serverTimestamp()
     });
     savedInMenu = true;
-    savedInMenu = true;
-lastSavedSaleSignature = saleSignature;
     $("storeDay").value = day;
     $("storeMessage").textContent =
       `บันทึกแล้ว ${saleMoney(sale.total)} · รอบวันที่ ${day}`;
