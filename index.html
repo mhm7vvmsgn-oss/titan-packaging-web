@@ -5446,5 +5446,38 @@ area.style.display = "none";
   updateWarning();
 })();
 </script>
+
+<style>
+/* เว้นระยะปุ่มประวัติขายล่าสุด */
+#jpgRows details {
+  margin-bottom: 18px;
+}
+
+#jpgRows details button,
+#jpgClear,
+#jpgClose {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0 !important;
+  padding: 14px 16px !important;
+  border-radius: 12px;
+  line-height: 1.5;
+  white-space: normal;
+  text-align: center;
+}
+
+#jpgRows details button + button {
+  margin-top: 14px !important;
+}
+
+#jpgClear {
+  margin-top: 20px !important;
+}
+
+#jpgClose {
+  margin-top: 14px !important;
+}
+</style>
 </body>
 </html>
