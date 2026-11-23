@@ -5271,7 +5271,44 @@ area.style.display = "none";
       search.setAttribute("aria-label", "ค้นหาสินค้า / Search Products");
     }
     if (productHeading) {
-      productHeading.innerHTML = "รายการสินค้า<small>Products</small>";
+            const panel = productHeading.closest(".panel");
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.style.width = "100%";
+      toggle.setAttribute("aria-controls", "products");
+      toggle.innerHTML = 'รายการสินค้า <span></span><small>Products</small>';
+      productHeading.replaceChildren(toggle);
+
+      const arrow = toggle.querySelector("span");
+      arrow.setAttribute("aria-hidden", "true");
+
+      const style = document.createElement("style");
+      style.textContent = `
+        .product-list-closed > :not(h2) {
+          display: none !important;
+        }
+      `;
+      document.head.append(style);
+
+      function showProductList(open) {
+        panel.classList.toggle("product-list-closed", !open);
+        toggle.setAttribute("aria-expanded", String(open));
+        arrow.textContent = open ? "▴" : "▾";
+      }
+
+      showProductList(false);
+
+      toggle.addEventListener("click", () => {
+        showProductList(panel.classList.contains("product-list-closed"));
+      });
+
+      categories.addEventListener("click", (event) => {
+        if (event.target.closest(".category")) showProductList(true);
+      }, true);
+
+      search.addEventListener("input", () => {
+        if (search.value.trim()) showProductList(true);
+      });
     }
 
     const brand = document.querySelector("body > header h1");
