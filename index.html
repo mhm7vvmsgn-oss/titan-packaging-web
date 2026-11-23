@@ -1525,6 +1525,26 @@ const H = Math.max(
       43, green, 800, "center"
     );
 
+if (slipImage) {
+  const slipTop = payTop + 165;
+
+  text(
+    "หลักฐานการโอนเงิน / Payment Slip",
+    540, slipTop + 20, 36, green, 800, "center"
+  );
+
+  ctx.fillStyle = "#f0f8f2";
+  ctx.fillRect(45, slipTop + 65, 990, slipHeight + 30);
+
+  ctx.drawImage(
+    slipImage,
+    70,
+    slipTop + 80,
+    940,
+    slipHeight
+  );
+}
+
     // ตกแต่งส่วนล่าง
     ctx.fillStyle = green;
     ctx.beginPath();
