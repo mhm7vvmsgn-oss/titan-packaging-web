@@ -1211,7 +1211,36 @@ $("download").before(titanSlipLabel, titanSlipInput);
     const tableBottom = tableTop + 80 + items.length * rowH;
     const totalTop = tableBottom + 38;
     const payTop = totalTop + 155;
-    const H = Math.max(1440, payTop + 285);
+    
+const slipFile = titanSlipInput.files?.[0];
+let slipImage = null;
+let slipHeight = 0;
+
+if (slipFile) {
+  slipImage = await new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(slipFile);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("เปิดรูปสลิปไม่ได้"));
+    };
+    img.src = url;
+  });
+
+  slipHeight = Math.round(
+    940 * slipImage.naturalHeight / slipImage.naturalWidth
+  );
+}
+
+const H = Math.max(
+  1440,
+  payTop + 285 + (slipImage ? slipHeight + 190 : 0)
+);
+
 
     const canvas = document.createElement("canvas");
     const scale = H > 3500 ? 1 : 2;
