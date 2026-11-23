@@ -1230,16 +1230,14 @@ if (slipFile) {
     };
     img.src = url;
   });
-
   slipHeight = Math.round(
-    940 * slipImage.naturalHeight / slipImage.naturalWidth
+    640 * slipImage.naturalHeight / slipImage.naturalWidth
   );
 }
 
-const H = Math.max(
-  1440,
-  payTop + 285 + (slipImage ? slipHeight + 190 : 0)
-);
+const H = slipImage
+  ? payTop + 410 + slipHeight
+  : payTop + 300;
 
 
     const canvas = document.createElement("canvas");
