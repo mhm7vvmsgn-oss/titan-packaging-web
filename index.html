@@ -1186,18 +1186,44 @@ const titanSlipInput = document.createElement("input");
 titanSlipInput.type = "file";
 titanSlipInput.accept = "image/*";
 titanSlipInput.id = "titan-slip-photo";
-titanSlipInput.style.cssText =
-  "display:block;width:100%;margin:12px 0;padding:12px;" +
-  "border:2px dashed #168044;border-radius:12px;background:#f1faf3";
+titanSlipInput.hidden = true;
 
-const titanSlipLabel = document.createElement("label");
-titanSlipLabel.htmlFor = "titan-slip-photo";
-titanSlipLabel.textContent = "📷 แนบสลิปโอนเงิน (ถ่ายรูปหรือเลือกจากเครื่อง)";
-titanSlipLabel.style.cssText =
-  "display:block;margin-top:12px;font-weight:bold;color:#07652d";
+const slipMenu = document.createElement("div");
+slipMenu.style.margin = "12px 0";
+slipMenu.innerHTML = `
+  <strong>แนบสลิปโอนเงิน</strong>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0">
+    <button type="button" data-camera
+      style="min-height:52px;background:#166534;color:white;border:0;border-radius:12px">
+      <strong>📷 ถ่ายรูปสลิป</strong>
+      <small lang="en" style="display:block">Take Photo</small>
+    </button>
+    <button type="button" data-upload
+      style="min-height:52px;background:#e8f3ed;color:#14532d;border:1px solid #86b89a;border-radius:12px">
+      <strong>🖼️ อัปโหลดจากเครื่อง</strong>
+      <small lang="en" style="display:block">Upload from Device</small>
+    </button>
+  </div>
+  <small role="status">ยังไม่ได้แนบสลิป</small>
+`;
 
-$("download").before(titanSlipLabel, titanSlipInput);
+slipMenu.querySelector("[data-camera]").onclick = () => {
+  titanSlipInput.setAttribute("capture", "environment");
+  titanSlipInput.click();
+};
 
+slipMenu.querySelector("[data-upload]").onclick = () => {
+  titanSlipInput.removeAttribute("capture");
+  titanSlipInput.click();
+};
+
+titanSlipInput.onchange = () => {
+  const file = titanSlipInput.files[0];
+  slipMenu.querySelector('[role="status"]').textContent =
+    file ? "✓ แนบสลิปแล้ว · " + file.name : "ยังไม่ได้แนบสลิป";
+};
+
+$("download").before(slipMenu, titanSlipInput);
   $("download").onclick = async () => {
   const items = entries();
   if (!items.length) {
