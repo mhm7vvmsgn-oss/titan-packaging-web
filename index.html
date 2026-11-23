@@ -5496,14 +5496,19 @@ area.style.display = "none";
   const warning = document.createElement("div");
   warning.id = "titan-account-warning";
 
+    warning.style.textAlign = "center";
+
   const heading = document.createElement("div");
-  heading.textContent = "⚠️ กรุณาโอนเงิน ชื่อบัญชี";
+  heading.textContent = "กรุณาโอนเงินชื่อบัญชี";
 
-  const name = document.createElement("span");
+  const name = document.createElement("div");
   name.className = "account-name";
-  name.textContent = "นายกฤชณนณ์ จิวเจริญ เท่านั้น";
+  name.textContent = "นาย กฤชณนท์ จิวเจริญ";
 
-  warning.append(heading, name);
+  const note = document.createElement("div");
+  note.textContent = "…(เท่านั้น)…";
+
+  warning.append(heading, name, note);
   qr.append(warning);
 
   const updateWarning = () => {
