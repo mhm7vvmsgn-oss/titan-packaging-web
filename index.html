@@ -603,13 +603,19 @@ function currentSale() {
     items,
     payment: document.querySelector(
       'input[name="titan-checkout-method"]:checked'
-    )?.value === "transfer" ? "เงินโอน" : "เงินสด",
+    )?.value === "transfer" ? "เงินโอน" :
+    (document.querySelector('input[name="titan-checkout-method"]:checked')?.value === "cash"
+      ? "เงินสด" : "ไม่ระบุ"),
     total: items.reduce((sum, item) => sum + item.amount, 0)
   };
 }
 
 let busySaving = false;
 let savedInMenu = false;
+  let busySaving = false;
+let savedInMenu = false;
+let lastSavedSaleSignature = null;
+let historyRequest = 0;
 let historyRequest = 0;
 
 saleMenu.onclick = () => {
@@ -640,6 +646,7 @@ $("storeSave").onclick = async () => {
   if (busySaving || savedInMenu || !validAdmin(auth?.currentUser)) return;
   const sale = currentSale();
   if (!sale.items.length) return;
+  $("storeSave").onclick = async () => {
   if (prompt("ใส่ PIN เพื่อบันทึกยอดขาย") !== "1234") {
     $("storeMessage").textContent = "ยังไม่ได้บันทึก กรุณาตรวจ PIN";
     return;
@@ -654,6 +661,8 @@ $("storeSave").onclick = async () => {
       ...sale, day, soldAt: now, createdAt: serverTimestamp()
     });
     savedInMenu = true;
+    savedInMenu = true;
+lastSavedSaleSignature = saleSignature;
     $("storeDay").value = day;
     $("storeMessage").textContent =
       `บันทึกแล้ว ${saleMoney(sale.total)} · รอบวันที่ ${day}`;
@@ -4740,7 +4749,7 @@ document.querySelector("#titan-sales-dialog p:not([id])").hidden = false;
     <label>
       <input type="radio"
              name="titan-checkout-method"
-             value="cash" checked>
+             value="cash"
       💵 เงินสด / Cash
     </label>
 
