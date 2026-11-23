@@ -4741,23 +4741,26 @@ document.querySelector("#titan-sales-dialog p:not([id])").hidden = false;
   checkout.innerHTML = `
     <h3>วิธีชำระเงิน <small>Payment Method</small></h3>
 
-    <label>
-      
-<input type="radio"
-       name="titan-checkout-method"
-       value="cash">
-💵 เงินสด / Cash
+    
+<div class="titan-payment-options"
+     style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch;">
 
-</label>
+  <label style="width:100%;margin:0!important;">
+    <input type="radio"
+           name="titan-checkout-method"
+           value="cash">
+    <span>💵 เงินสด / Cash</span>
+  </label>
 
+  <label style="width:100%;margin:0!important;">
+    <input type="radio"
+           name="titan-checkout-method"
+           value="transfer">
+    <span>📱 เงินโอน / Bank Transfer</span>
+  </label>
 
+</div>
 
-    <label>
-      <input type="radio"
-             name="titan-checkout-method"
-             value="transfer">
-      📱 เงินโอน / Bank Transfer
-    </label>
 
     <div id="titan-new-qr" hidden>
       <p><strong>สแกน QR เพื่อโอนเงิน</strong></p>
