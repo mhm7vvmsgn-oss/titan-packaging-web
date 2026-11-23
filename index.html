@@ -551,26 +551,57 @@ saleMenu.innerHTML =
   "บันทึกรายการขายหน้าร้าน<small>Store Sales</small>";
 $("clear").after(saleMenu);
 
-const salesBox = document.createElement("dialog");
-salesBox.style.cssText =
-  "width:min(92vw,480px);max-height:85vh;overflow:auto;" +
-  "box-sizing:border-box;border:0;border-radius:16px;padding:20px";
 salesBox.innerHTML = `
-  <h2>รายการขายหน้าร้าน<small>Store Sales</small></h2>
-  <p id="storeCartPreview"></p>
-  <button type="button" id="storeSave" style="background:#087cb8;width:100%">
-    บันทึกจากตะกร้า<small>Save Cart as Sale</small>
-  </button>
-  <hr>
-  <label for="storeDay">วันที่สรุปยอด / Sales Date</label>
-  <input type="date" id="storeDay">
-  <button type="button" id="storeHistory">
-    ดูยอดย้อนหลัง<small>Sales History</small>
-  </button>
+  <style>
+    .store-section {
+      margin: 12px 0;
+      padding: 14px;
+      border-radius: 14px;
+      text-align: left;
+    }
+    .store-section h3 { margin: 0; font-size: 18px; }
+    .store-section h3 small { display: block; font-size: 12px; }
+    .store-section p { margin: 8px 0; }
+    .store-section button, .store-section input {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+    .store-section input { margin: 6px 0 10px; }
+    .store-save-hint { display: none; }
+    #storeSave:disabled + .store-save-hint {
+      display: block;
+      color: #344955;
+      font-size: 14px;
+    }
+  </style>
+
+  <h2>ขายหน้าร้าน<small>Store Sales</small></h2>
+
+  <section class="store-section" style="background:#eef7fc">
+    <h3>บิลจากตะกร้าตอนนี้<small>Current Cart</small></h3>
+    <p id="storeCartPreview"></p>
+    <button type="button" id="storeSave"
+      style="background:#087cb8;color:white">
+      บันทึกบิลนี้<small>Save This Sale</small>
+    </button>
+    <p class="store-save-hint">ตะกร้าว่าง · เพิ่มสินค้าก่อนบันทึกบิล</p>
+  </section>
+
+  <section class="store-section" style="background:#eff7f1">
+    <h3>ดูยอดขายที่บันทึกไว้<small>Sales History</small></h3>
+    <p>ยอดขายหลัง 17:00 น. ให้ดูที่วันถัดไป</p>
+    <label for="storeDay">เลือกวันที่ต้องการดู</label>
+    <input type="date" id="storeDay">
+    <button type="button" id="storeHistory">
+      ดูยอดของวันที่เลือก<small>View Sales for This Date</small>
+    </button>
+  </section>
+
   <p id="storeMessage" role="status"></p>
   <div id="storeResults"></div>
   <button type="button" id="storeClose" class="secondary">
-    ปิด<small>Close</small>
+    ปิดหน้าต่าง<small>Close</small>
   </button>`;
 document.body.append(salesBox);
 
