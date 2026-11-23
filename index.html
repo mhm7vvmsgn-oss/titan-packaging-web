@@ -551,6 +551,10 @@ saleMenu.innerHTML =
   "บันทึกรายการขายหน้าร้าน<small>Store Sales</small>";
 $("clear").after(saleMenu);
 
+const salesBox = document.createElement("dialog");
+salesBox.style.cssText =
+  "width:min(92vw,480px);max-height:85vh;overflow:auto;" +
+  "box-sizing:border-box;border:0;border-radius:16px;padding:20px";
 salesBox.innerHTML = `
   <style>
     .store-section {
