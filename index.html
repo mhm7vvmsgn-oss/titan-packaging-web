@@ -1181,7 +1181,24 @@ jpgBox.addEventListener("close", () => {
   jpgDocs = [];
   $("jpgRows").replaceChildren();
 });
-$("download").onclick = async () => {
+
+const titanSlipInput = document.createElement("input");
+titanSlipInput.type = "file";
+titanSlipInput.accept = "image/*";
+titanSlipInput.id = "titan-slip-photo";
+titanSlipInput.style.cssText =
+  "display:block;width:100%;margin:12px 0;padding:12px;" +
+  "border:2px dashed #168044;border-radius:12px;background:#f1faf3";
+
+const titanSlipLabel = document.createElement("label");
+titanSlipLabel.htmlFor = "titan-slip-photo";
+titanSlipLabel.textContent = "📷 แนบสลิปโอนเงิน (ถ่ายรูปหรือเลือกจากเครื่อง)";
+titanSlipLabel.style.cssText =
+  "display:block;margin-top:12px;font-weight:bold;color:#07652d";
+
+$("download").before(titanSlipLabel, titanSlipInput);
+
+  $("download").onclick = async () => {
   const items = entries();
   if (!items.length) {
     return alert("กรุณาเพิ่มสินค้าในตะกร้าก่อน");
