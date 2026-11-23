@@ -1524,22 +1524,24 @@ const H = slipImage
     );
 
 if (slipImage) {
-  const slipTop = payTop + 165;
+    const slipTop = payTop + 145;
+  const slipWidth = 640;
+  const slipLeft = (W - slipWidth) / 2;
 
   text(
     "หลักฐานการโอนเงิน / Payment Slip",
-    540, slipTop + 20, 36, green, 800, "center"
+    W / 2, slipTop + 20, 36, green, 800, "center"
   );
 
   ctx.fillStyle = "#f0f8f2";
-  ctx.fillRect(45, slipTop + 65, 990, slipHeight + 30);
+  ctx.fillRect(
+    slipLeft - 10, slipTop + 48,
+    slipWidth + 20, slipHeight + 20
+  );
 
   ctx.drawImage(
-    slipImage,
-    70,
-    slipTop + 80,
-    940,
-    slipHeight
+    slipImage, slipLeft, slipTop + 58,
+    slipWidth, slipHeight
   );
 }
 
