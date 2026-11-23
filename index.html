@@ -682,7 +682,7 @@ $("storeHistory").onclick = async () => {
     if (request !== historyRequest) return;
     
         const sales = snapshot.docs.map(d => ({ ...d.data(), ref: d.ref }))
-      .sort((a, b) => b.soldAt.toMillis() - a.soldAt.toMillis());
+      .sort((a, b) => a.soldAt.toMillis() - b.soldAt.toMillis());
     const sum = sales.reduce((n, s) => n + s.total, 0);
     $("storeMessage").textContent =
       `${day} · ${sales.length} บิล · ยอดรวม ${saleMoney(sum)}`;
