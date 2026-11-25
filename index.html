@@ -2572,10 +2572,7 @@ const blankRows = Array.from(
 ).join("");
 
 
-  const blankRows = Array.from(
-    { length: Math.max(0, 10 - lines.length) },
-    () => '<tr class="blank"><td></td><td></td><td></td><td></td><td></td></tr>'
-  ).join("");
+
 
   win.document.open();
   win.document.write(`<!doctype html>
