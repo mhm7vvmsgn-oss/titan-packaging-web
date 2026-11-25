@@ -4870,6 +4870,34 @@ input.readOnly = true;
 q("status").textContent = "กำลังบันทึก...";
 
 try{
+  
+if (existing && editMode) {
+  if (!existing._docId) {
+    throw new Error("ไม่พบรหัสเอกสารเดิม");
+  }
+
+  await updateDoc(
+    doc(db, "pickupNotes", existing._docId),
+    {
+      ...information,
+      items: lines,
+      ...(noPrice ? {} : {
+        total: lines.reduce(
+          (sum, p) =>
+            sum + Math.round(p.qty * p.price * 100) / 100,
+          0
+        )
+      })
+    }
+  );
+
+  q("number").textContent = existing.number;
+  d.title = "ใบรับสินค้าหน้าร้าน_" + existing.number;
+
+  freezeDocument();
+  return;
+}
+
 
 const counter = doc(db,"pickupCounters",prefix);
 const record = doc(collection(db,"pickupNotes"));
