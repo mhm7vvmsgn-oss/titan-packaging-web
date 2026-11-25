@@ -3042,12 +3042,6 @@ tbody tr.blank{
 
   <div class="table-box">
     <table>
-      <colgroup>
-        <col style="width:11%">
-        <col style="width:35%">
-        <col style="width:20%">
-        <col style="width:14%">
-        <col style="width:20%">
       
 <colgroup>
   <col style="width:11%">
@@ -3068,10 +3062,14 @@ tbody tr.blank{
 
       <tbody>${rows}${blankRows}</tbody>
     </table>
-    <div class="grand">
-      <span>ยอดรวมสุทธิ / Net Total</span>
-      <strong>${baht(total)} บาท</strong>
-    </div>
+    
+${noPrice ? "" : `
+<div class="grand">
+  <span>ยอดรวมสุทธิ / Net Total</span>
+  <strong>${baht(total)} บาท</strong>
+</div>
+`}
+
   </div>
 
   <div class="payment">
