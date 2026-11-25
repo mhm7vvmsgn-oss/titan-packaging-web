@@ -4766,16 +4766,37 @@ let saving = false;
 
 q("print").onclick = () => win.print();
 
+
 q("close").onclick = () => {
+  if (saving) {
+    win.alert("กำลังบันทึกเอกสาร");
+    return;
+  }
 
-if(saving)return;
+  if (!q("save").disabled &&
+      !win.confirm("ปิดโดยไม่บันทึกหรือไม่?")) {
+    return;
+  }
 
-if(q("save").disabled ||
-win.confirm("ปิดโดยไม่บันทึกหรือไม่?")){
-win.close();
-}
+  const appUrl = window.location.href;
 
+  try {
+    win.close();
+  } catch (error) {
+    console.warn(error);
+  }
+
+  window.setTimeout(() => {
+    try {
+      if (!win.closed) {
+        win.location.replace(appUrl);
+      }
+    } catch (error) {
+      console.warn(error);
+    }
+  }, 300);
 };
+
 
 if(existing){
 freezeDocument();
