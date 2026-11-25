@@ -414,16 +414,16 @@ $("categoryTitle").innerHTML=pricingMode==="special"
 ?'🔒 สินค้าราคาพิเศษ<small>Special Pricing</small>'
 :'เลือกประเภทสินค้า<small>Product Categories</small>';
 
-const shown=pricingMode==="special"
-?cats.filter(c=>c[0]!=="special")
-:cats;
+const shown=cats;
 
 $("categories").innerHTML=shown.map(c=>{
 const locked=c[0]==="special"&&!validAdmin(auth?.currentUser);
 return `
 <button
 type="button"
-class="category ${active===c[0]?"active":""} ${locked?"locked":""}"
+
+class="category ${(c[0]==="special"?pricingMode==="special":active===c[0])?"active":""} ${locked?"locked":""}"
+
 data-cat="${c[0]}"
 ${locked?"disabled":""}>
 <span>${c[1]}</span>
