@@ -2480,6 +2480,15 @@ function openDocumentMenu() {
           <span style="flex:1;min-width:0"><strong>สร้างใบส่งสินค้าแบบไม่แสดงราคา</strong><small>Delivery Note Without Prices</small><small style="margin-top:5px">แสดงเฉพาะรายการและจำนวน</small></span>
           <span aria-hidden="true" style="font-size:22px">›</span>
         </button>
+        <button type="button" id="menuDeliveryHistory" style="display:flex;align-items:center;gap:12px;text-align:left;background:#fff5e4;color:#946018;border:1px solid #e5c68f;border-radius:14px;padding:14px">
+  <span style="background:#946018;color:white;border-radius:10px;padding:10px;flex-shrink:0;font-size:22px">📚</span>
+  <span style="flex:1;min-width:0">
+    <strong>ประวัติใบส่งสินค้า</strong>
+    <small>Delivery History</small>
+    <small style="margin-top:5px">ดูย้อนหลัง แก้ไข ดาวน์โหลด และลบ</small>
+  </span>
+  <span style="font-size:22px">›</span>
+</button>
         <div style="border-top:1px solid #e5eae6;margin-top:4px"></div>
         <button type="button" id="menuClose" style="background:#f1f3f2;color:#56635c;border-radius:12px;padding:12px">ปิด / Close</button>
         <small style="text-align:center;color:#64766a;letter-spacing:1px">TITAN PACKAGING</small>
@@ -2498,7 +2507,10 @@ function openDocumentMenu() {
       menu.close();
       openDeliveryNote(null, true);
     };
-
+document.getElementById("menuDeliveryHistory").onclick = () => {
+  menu.close();
+  historyButton.click();
+};
     document.getElementById("menuClose").onclick = () => {
       menu.close();
     };
@@ -4966,7 +4978,7 @@ history.remove();
 const historyButton = document.createElement("button");
 historyButton.type = "button";
 historyButton.textContent = "ประวัติใบส่งสินค้า / Delivery History";
-$("createDeliveryNote").after(historyButton);
+// ย้ายประวัติใบส่งสินค้าเข้าเมนูเอกสาร
   for (const button of [historyButton, saleMenu, jpgMenu]) {
   button.classList.add("admin-sale-button");
 }
