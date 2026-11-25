@@ -3997,10 +3997,14 @@ const pickupButton = document.createElement("button");
 pickupButton.type = "button";
 pickupButton.className = "admin-sale-button";
 pickupButton.style.cssText =
-"grid-column:1/-1;background:#08682e;color:white;border-radius:12px;padding:12px";
+  "grid-column:auto;background:#ea580c;color:white;border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;";
 
-pickupButton.innerHTML =
-"🏪 ใบรับสินค้าหน้าร้าน<small>Store Pickup</small>";
+pickupButton.innerHTML = `
+  <span style="font-size:24px;">🚚</span>
+  <span style="font-size:13px;font-weight:600;">ใบรับสินค้าหน้าร้าน</span>
+  <small style="font-size:11px;color:#ffead5;margin:0;">Store Pickup</small>
+`;
+
 
 $("createDeliveryNote").after(pickupButton);
 
