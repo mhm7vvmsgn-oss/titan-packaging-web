@@ -3942,6 +3942,8 @@ function showArchivedNotes() {
     const title = document.createElement("strong");
     title.textContent = `${n.number} · ${n.customer || "ไม่ระบุชื่อลูกค้า"}`;
     
+const amount = document.createElement("p");
+
 amount.textContent = n.noPrice === true
   ? "ใบส่งสินค้าไม่มีราคา"
   : Number(n.total).toLocaleString("th-TH", {
