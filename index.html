@@ -512,7 +512,6 @@ return;
 
 const q=$("search").value.trim().toLocaleLowerCase("th");
 
-$("newProduct").disabled=blocked;
 const list=products.filter(p=>
 canView(p)&&
 p.pricing===pricingMode&&
