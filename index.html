@@ -86,6 +86,20 @@ body:not(:has(#loginPanel.hidden)) .admin-sale-button {
     opacity: 1;
   }
 </style>
+<style>
+.manager-bar,.manager-modes{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.manager-bar h2,.manager-bar h3{margin:0}
+.manager-modes{margin:18px 0}
+.manager-modes button{flex:1;min-height:48px}
+#adminCategories{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;margin-bottom:20px}
+#adminCategories button{padding:8px 4px;min-height:60px;font-size:14px}
+#adminCategories span{font-size:18px}
+#productManager .manager-bar{margin-bottom:14px}
+#productEditorTitle{margin:16px 0 4px}
+#editorContext{margin:0 0 16px;color:#45644d}
+#adminProducts .details{overflow-wrap:anywhere}
+#adminProducts button{padding:9px}
+</style>
 </head>
 <body>
 
@@ -186,30 +200,31 @@ autocomplete="username">
 
 <div id="editorPanel" class="hidden">
 
-<div class="panel">
-<h2>เลือกจัดการสินค้า<small>Product Management</small></h2>
-<div class="categories">
-<button id="manageRegular" type="button" class="category active">
-แก้ไขสินค้าราคาปกติ<small>Manage Regular Products</small>
-</button>
-<button id="manageSpecial" type="button" class="category">
-แก้ไขสินค้าราคาพิเศษ<small>Manage Special Products</small>
-</button>
+<div class="panel" id="productManager">
+<div class="manager-bar">
+<h2>จัดการสินค้า<small>Product Management</small></h2>
+<button class="secondary" id="logout" type="button">ออกจากระบบ<small>Logout</small></button>
 </div>
-<p id="specialSetup" class="notice hidden">
-ราคาพิเศษยังไม่เปิดใช้งาน รอตั้งค่าสิทธิ์ข้อมูล
-<small>Special pricing is pending access setup.</small>
-</p>
+<div class="manager-modes">
+<button id="manageRegular" type="button" class="category active">ราคาปกติ<small>Regular</small></button>
+<button id="manageSpecial" type="button" class="category">ราคาพิเศษ<small>Special</small></button>
+</div>
+<p id="specialSetup" class="notice hidden">ราคาพิเศษยังไม่เปิดใช้งาน / Access setup required</p>
+<h3>หมวดสินค้า<small>Category</small></h3>
+<div id="adminCategories" class="categories"></div>
+<div class="manager-bar">
+<h3 id="editorTitle"></h3>
+<button type="button" id="newProduct">＋ เพิ่มสินค้าใหม่<small>Add Product</small></button>
+</div>
+<label for="adminSearch">ค้นหาชื่อสินค้า / Search products</label>
+<input id="adminSearch" type="search">
+<div id="adminProducts"></div>
 </div>
 
-<div class="panel">
-<h2 id="editorTitle">
-⚙️ สินค้าราคาปกติ<small>Regular Products</small>
-</h2>
-<button class="secondary" id="logout" type="button">
-ออกจากระบบ / Logout
-</button>
-
+<div class="panel hidden" id="productEditor">
+<button class="secondary" type="button" id="backToProducts">← กลับรายการสินค้า / Back</button>
+<h2 id="productEditorTitle"></h2>
+<p id="editorContext"></p>
 <form id="productForm">
 <input type="hidden" id="editId">
 
@@ -249,10 +264,7 @@ Customers see only the saved color.
 </form>
 </div>
 
-<div class="panel">
-<h2>รายการสินค้า<small>Product List</small></h2>
-<div id="adminProducts"></div>
-</div>
+
 
 </div>
 <p id="adminMessage" class="notice"></p>
@@ -471,9 +483,11 @@ renderCategories();
 renderProducts();
 };
 
+let selectedAdminCategory="box";
 function setAdminMode(mode){
 if(!validAdmin(auth?.currentUser))return;
 adminMode=mode;
+$("adminSearch").value="";
 resetForm();
 renderAdmin();
 }
@@ -498,6 +512,7 @@ return;
 
 const q=$("search").value.trim().toLocaleLowerCase("th");
 
+$("newProduct").disabled=blocked;
 const list=products.filter(p=>
 canView(p)&&
 p.pricing===pricingMode&&
@@ -4090,6 +4105,40 @@ function adminMessage(t){
 $("adminMessage").textContent=t;
 }
 
+function showProductEditor(product){
+  if(!validAdmin(auth?.currentUser))return;
+  resetForm();
+  if(product){
+    for(const key of ["category","name","price","unit","color"]){
+      $(key).value=product[key]??"";
+    }
+    $("editId").value=product.id;
+  }
+  toggleColorField();
+  const category=cats.find(c=>c[0]===selectedAdminCategory);
+  const mode=adminMode==="special"?"ราคาพิเศษ / Special":"ราคาปกติ / Regular";
+  $("productEditorTitle").textContent=product?"แก้ไขสินค้า / Edit Product":"เพิ่มสินค้าใหม่ / Add Product";
+  $("editorContext").textContent=category[2]+" · "+mode;
+  adminMessage("");
+  $("productManager").classList.add("hidden");
+  $("productEditor").classList.remove("hidden");
+  const field=$(product?"price":"name");
+  field.focus();
+  if(product)field.select();
+}
+function closeProductEditor(){
+  $("productEditor").classList.add("hidden");
+  $("productManager").classList.remove("hidden");
+}
+$("backToProducts").onclick=()=>{
+  const id=$("editId").value;
+  resetForm();
+  closeProductEditor();
+  const button=Array.from($("adminProducts").querySelectorAll("[data-edit]")).find(el=>el.dataset.edit===id);
+  (button||$("newProduct")).focus();
+};
+$("newProduct").onclick=()=>showProductEditor();
+$("adminSearch").oninput=()=>renderAdmin();
 function renderAdmin(){
 if(!validAdmin(auth?.currentUser)){
 $("adminProducts").replaceChildren();
@@ -4115,8 +4164,11 @@ $("productForm").querySelectorAll("input,select,button").forEach(el=>{
 el.disabled=blocked;
 });
 
+$("newProduct").disabled=blocked;
 const list=products.filter(p=>
-p.pricing===adminMode&&canView(p)
+p.pricing===adminMode&&canView(p)&&
+(p.category||"box")===selectedAdminCategory&&
+String(p.name).toLocaleLowerCase("th").includes($("adminSearch").value.trim().toLocaleLowerCase("th"))
 );
 
 $("adminProducts").innerHTML=list.length
@@ -4141,13 +4193,7 @@ b.onclick=()=>{
 const p=products.find(x=>x.id===b.dataset.edit);
 if(!p)return;
 
-for(const k of ["category","name","price","unit","color"]){
-$(k).value=p[k]??"";
-}
-
-$("editId").value=p.id;
-toggleColorField();
-window.scrollTo({top:0,behavior:"smooth"});
+showProductEditor(p);
 };
 });
 
@@ -4234,7 +4280,9 @@ await addDoc(collection(db,target),payload);
 }
 
 resetForm();
-adminMessage("บันทึกสินค้าเรียบร้อย");
+closeProductEditor();
+$("newProduct").focus();
+adminMessage("บันทึกสินค้าเรียบร้อย / Product saved");
 }catch(e){
 adminMessage("บันทึกไม่สำเร็จ: "+e.message);
 }
@@ -4294,6 +4342,8 @@ delete cart[key];
 }
 
 if(!ok){
+closeProductEditor();
+$("adminSearch").value="";
 pricingMode="regular";
 adminMode="regular";
 active="box";
@@ -4356,7 +4406,7 @@ $("status").textContent="Firebase Error: "+e.message;
     sensitivity: "base"
   });
 
-  let selectedAdminCategory = "box";
+
 
   // เมนูเรียงสินค้าในหน้าลูกค้า
   if (!$("productSort")) {
@@ -4415,25 +4465,7 @@ $("status").textContent="Firebase Error: "+e.message;
   $("search").oninput = () => renderProducts();
 
   // ปุ่มเลือกหมวดในหน้าผู้ดูแล
-  let categoryMenu = $("adminCategories");
-
-  if (!categoryMenu) {
-    const panel = document.createElement("div");
-    panel.className = "panel";
-
-    const heading = document.createElement("h2");
-    heading.innerHTML = `
-      เลือกหมวดที่ต้องการแก้ไข
-      <small>Select Category to Edit</small>
-    `;
-
-    categoryMenu = document.createElement("div");
-    categoryMenu.id = "adminCategories";
-    categoryMenu.className = "categories";
-
-    panel.append(heading, categoryMenu);
-    $("editorPanel").prepend(panel);
-  }
+  const categoryMenu=$("adminCategories");
 
   function drawAdminCategoryMenu() {
     categoryMenu.innerHTML = categoryOptions.map(c => `
@@ -4455,6 +4487,7 @@ $("status").textContent="Firebase Error: "+e.message;
     ).forEach(button => {
       button.onclick = () => {
         selectedAdminCategory = button.dataset.editCategory;
+        $("adminSearch").value="";
         resetForm();
         adminMessage("");
         renderAdmin();
@@ -4502,7 +4535,7 @@ $("status").textContent="Firebase Error: "+e.message;
 
       if (
         !product ||
-        product.category !== selectedAdminCategory
+        (product.category || "box") !== selectedAdminCategory
       ) {
         row.remove();
         return;
@@ -4524,7 +4557,7 @@ $("status").textContent="Firebase Error: "+e.message;
       const message = document.createElement("p");
       message.className = "notice";
       message.textContent =
-        "ยังไม่มีสินค้าในหมวดนี้ / No products in this category";
+        $("adminSearch").value.trim() ? "ไม่พบสินค้าที่ค้นหา / No matches" : "ยังไม่มีสินค้าในหมวดนี้ / No products in this category";
       container.append(message);
     }
   };
