@@ -3780,6 +3780,50 @@ ${noPrice ? "" : `
       }
     `;
   }
+  if (noPrice) {
+  note.querySelector(".payment")?.remove();
+
+  const table = note.querySelector(".table-box table");
+  const cols = table.querySelector("colgroup");
+  cols.children[1].style.width = "61%";
+
+  const unitCol = note.createElement("col");
+  unitCol.style.width = "14%";
+  cols.insertBefore(unitCol, cols.children[2]);
+
+  const header = table.querySelector("thead tr");
+  const th = note.createElement("th");
+  th.innerHTML = "หน่วย<small>Unit</small>";
+  header.insertBefore(th, header.children[2]);
+
+  const source = existing ? [] : entries();
+
+  table.querySelectorAll("tbody tr").forEach((row, i) => {
+    const td = note.createElement("td");
+    td.className = "center";
+    row.insertBefore(td, row.children[2]);
+
+    if (i >= lines.length) return;
+
+    const field = note.createElement("span");
+    field.className = "editable-unit";
+    field.textContent = lines[i].unit ??
+      (existing ? "" : source[i]?.p?.unit || "ชิ้น");
+
+    lines[i].unit = field.textContent;
+
+    field.contentEditable = existing ? "false" : "plaintext-only";
+    field.style.cssText = "display:block;min-height:20px;overflow-wrap:anywhere";
+    field.setAttribute("aria-label", "หน่วยสินค้า");
+
+    field.addEventListener("input", () => {
+      lines[i].unit = field.textContent.trim();
+    });
+
+    td.appendChild(field);
+  });
+}
+
     const badge = note.querySelector(".header .badge");
   const printButton = note.querySelector(".tools button");
   const numberLabel = note.createElement("span");
@@ -3869,6 +3913,10 @@ tx.set(delivery, {
       numberLabel.textContent = "เลขที่เอกสาร / Doc No. " + savedNumber;
       note.title = "ใบส่งสินค้า_" + savedNumber;
       printButton.textContent = "พิมพ์ / บันทึก PDF";
+      note.querySelectorAll(".editable-unit").forEach(el => {
+  el.contentEditable = "false";
+});
+
       win.print();
     } catch (error) {
       console.error(error);
