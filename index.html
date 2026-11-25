@@ -414,7 +414,11 @@ $("categoryTitle").innerHTML=pricingMode==="special"
 ?'🔒 สินค้าราคาพิเศษ<small>Special Pricing</small>'
 :'เลือกประเภทสินค้า<small>Product Categories</small>';
 
-const shown=cats;
+
+const shown=pricingMode==="special"
+  ?cats.filter(c=>c[0]!=="special")
+  :cats;
+
 
 $("categories").innerHTML=shown.map(c=>{
 const locked=c[0]==="special"&&!validAdmin(auth?.currentUser);
