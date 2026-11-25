@@ -3941,10 +3941,14 @@ function showArchivedNotes() {
     row.style.cssText = "border-top:1px solid #d9e4dd;padding:12px 0";
     const title = document.createElement("strong");
     title.textContent = `${n.number} · ${n.customer || "ไม่ระบุชื่อลูกค้า"}`;
-    const amount = document.createElement("p");
-    amount.textContent = Number(n.total).toLocaleString("th-TH", {
-      style: "currency", currency: "THB"
+    
+amount.textContent = n.noPrice === true
+  ? "ใบส่งสินค้าไม่มีราคา"
+  : Number(n.total).toLocaleString("th-TH", {
+      style: "currency",
+      currency: "THB"
     });
+
     row.append(title, amount);
 
     function action(label, handler) {
