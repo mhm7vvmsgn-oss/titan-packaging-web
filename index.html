@@ -3835,17 +3835,14 @@ ${noPrice ? "" : `
         const next = (snapshot.data()?.lastNumber ?? 0) + 1;
         const number = prefix + "-" + String(next).padStart(3, "0");
 
-        tx.set(counter, { lastNumber: next });
-        tx.set(delivery, {
-          
+        
+tx.set(counter, { lastNumber: next });
 tx.set(delivery, {
   noPrice: noPrice,
   number,
   date: deliveryDate,
+  payment: note.querySelector('input[name="delivery-pay"]:checked')?.value || "",
 
-          number,
-          date: deliveryDate,
-                    payment: note.querySelector('input[name="delivery-pay"]:checked')?.value || "",
           customer: note.querySelector(".titan-name-line").innerText.trim(),
           address: note.querySelector(".titan-address-lines").innerText.trim(),
           items: lines,
