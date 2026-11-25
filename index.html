@@ -3978,6 +3978,991 @@ tx.set(delivery, {
 };
 
 // === จบใบส่งสินค้าแบบใหม่ ===
+// ===== ระบบใบรับสินค้าหน้าร้าน =====
+(function installStorePickup(){
+
+const pickupButton = document.createElement("button");
+pickupButton.type = "button";
+pickupButton.className = "admin-sale-button";
+pickupButton.style.cssText =
+"grid-column:1/-1;background:#08682e;color:white;border-radius:12px;padding:12px";
+
+pickupButton.innerHTML =
+"🏪 ใบรับสินค้าหน้าร้าน<small>Store Pickup</small>";
+
+$("createDeliveryNote").after(pickupButton);
+
+const pickupMenu = document.createElement("dialog");
+
+pickupMenu.style.cssText =
+"width:min(92vw,440px);max-height:85vh;overflow:auto;border:0;border-radius:18px;padding:18px;box-sizing:border-box";
+
+pickupMenu.innerHTML = `
+<h2>🏪 ใบรับสินค้าหน้าร้าน
+<small>Store Pickup</small></h2>
+
+<div style="display:grid;gap:12px">
+
+<button type="button" id="pickupShowPrice"
+style="background:#08682e;color:white">
+🏷️ แสดงราคา
+<small>Show Price</small>
+</button>
+
+<button type="button" id="pickupHidePrice"
+style="background:#2563a8;color:white">
+📋 ไม่แสดงราคา
+<small>Hide Price</small>
+</button>
+
+<button type="button" id="pickupHistory"
+style="background:#475569;color:white">
+📁 ประวัติใบรับสินค้าหน้าร้าน
+<small>Pickup History</small>
+</button>
+
+<button type="button" id="pickupClose"
+class="secondary">ปิด / Close</button>
+
+</div>`;
+
+document.body.append(pickupMenu);
+
+pickupButton.onclick = () => {
+if(!validAdmin(auth?.currentUser)){
+alert("กรุณาเข้าสู่ระบบผู้ดูแลก่อน");
+return;
+}
+pickupMenu.showModal();
+};
+
+pickupMenu.querySelector("#pickupShowPrice").onclick = () => {
+pickupMenu.close();
+openPickup(null,false);
+};
+
+pickupMenu.querySelector("#pickupHidePrice").onclick = () => {
+pickupMenu.close();
+openPickup(null,true);
+};
+
+pickupMenu.querySelector("#pickupHistory").onclick = () => {
+pickupMenu.close();
+openPickupHistory();
+};
+
+pickupMenu.querySelector("#pickupClose").onclick = () => {
+pickupMenu.close();
+};
+
+const formatPrice = n => Number(n).toLocaleString("th-TH",{
+minimumFractionDigits:2,
+maximumFractionDigits:2
+});
+
+function openPickup(existing,noPrice){
+
+if(!validAdmin(auth?.currentUser)){
+alert("สำหรับผู้ดูแลเท่านั้น");
+return;
+}
+
+if(existing) noPrice = existing.noPrice === true;
+
+const items = existing
+? existing.items.map(p=>({...p}))
+: entries().map(e=>({
+name:e.p.name+(e.color?" (สี"+e.color+")":""),
+qty:Number(e.qty),
+unit:e.p.unit||"ชิ้น",
+price:Number(e.p.price)
+}));
+
+if(!items.length){
+alert("กรุณาเพิ่มสินค้าลงตะกร้าก่อน");
+return;
+}
+
+const win = window.open("","_blank");
+
+if(!win){
+alert("กรุณาอนุญาตให้เปิดหน้าต่างใหม่");
+return;
+}
+
+const date = existing?.date?.toDate?.() || new Date();
+
+const dateText = date.toLocaleDateString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"2-digit",
+year:"numeric"
+});
+
+const timeText = date.toLocaleTimeString("en-GB",{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+});
+
+const logo = new URL(
+"./titan-original-logo.png",location.href
+).href;
+
+const d = win.document;
+
+d.open();
+d.write(`<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=794">
+<title>ใบรับสินค้าหน้าร้าน</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#e6efe8;
+font-family:Arial,Tahoma,sans-serif;
+color:#173c29;
+}
+
+.toolbar{
+width:210mm;
+margin:12px auto;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+button{
+background:#08682e;
+color:white;
+border:0;
+padding:10px 15px;
+border-radius:8px;
+font-size:14px;
+cursor:pointer;
+}
+
+button:disabled{opacity:.5}
+
+#status{
+width:100%;
+font-size:13px;
+}
+
+.paper{
+width:210mm;
+min-height:297mm;
+margin:0 auto 20px;
+padding:7mm;
+background:white;
+border:1.5px solid #087532;
+border-radius:7px;
+display:flex;
+flex-direction:column;
+gap:3mm;
+}
+
+.header{
+display:grid;
+grid-template-columns:44% 56%;
+align-items:center;
+}
+
+.brand{
+display:flex;
+align-items:center;
+gap:10px;
+color:#08682e;
+}
+
+.brand img{
+width:25mm;
+height:25mm;
+object-fit:contain;
+}
+
+.brand strong{font-size:29px}
+.brand small{display:block;font-size:19px}
+
+.store{
+font-size:11px;
+line-height:1.5;
+margin-top:7px;
+}
+
+.title{
+background:#08682e;
+color:white;
+padding:12px 6px;
+border-radius:9px;
+text-align:center;
+font-weight:bold;
+font-size:17px;
+}
+
+.meta{
+background:#e2f3e5;
+padding:8px;
+margin-top:7px;
+border-radius:6px;
+font-size:13px;
+}
+
+.stripe{
+height:4mm;
+border-top:3px solid #ffa500;
+border-bottom:3px solid #83bd28;
+border-radius:50%;
+}
+
+.two{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:3mm;
+}
+
+.field{
+display:flex;
+border:1px solid #08682e;
+border-radius:6px;
+overflow:hidden;
+min-height:11mm;
+}
+
+.field label{
+background:#08682e;
+color:white;
+padding:8px;
+font-size:13px;
+min-width:32mm;
+display:flex;
+flex-direction:column;
+justify-content:center;
+font-weight:bold;
+}
+
+.field label small{
+display:block;
+font-size:10px;
+font-weight:normal;
+}
+
+input{
+min-width:0;
+font-family:inherit;
+font-size:16px;
+color:#173c29;
+}
+
+.field input{
+width:100%;
+border:0;
+padding:8px;
+text-align:center;
+}
+
+table{
+border-collapse:collapse;
+width:100%;
+table-layout:fixed;
+font-size:13px;
+}
+
+th,td{
+border:1px solid #087532;
+padding:5px;
+overflow-wrap:anywhere;
+}
+
+th{
+background:#08682e;
+color:white;
+text-align:center;
+}
+
+td{
+height:9mm;
+text-align:center;
+}
+
+td:nth-child(2){
+text-align:left;
+}
+
+td input{
+width:100%;
+border:1px solid #b6d8bf;
+border-radius:4px;
+background:#edf8ef;
+text-align:center;
+padding:5px 2px;
+}
+
+input[readonly]{
+background:white;
+border-color:transparent;
+}
+
+.summary{
+background:#e2f3e5;
+padding:9px;
+border-radius:7px;
+display:flex;
+align-items:center;
+gap:10px;
+font-size:13px;
+font-weight:bold;
+}
+
+.summary input{
+flex:1;
+border:0;
+border-bottom:1px solid #56725e;
+background:transparent;
+width:100%;
+padding:5px;
+}
+
+.total{
+background:#e2f3e5;
+padding:10px;
+font-size:18px;
+font-weight:bold;
+text-align:right;
+}
+
+.confirm{
+text-align:center;
+font-size:16px;
+font-weight:bold;
+color:#08682e;
+}
+
+.sign{
+border:1px solid #08682e;
+border-radius:8px;
+overflow:hidden;
+min-height:30mm;
+text-align:center;
+}
+
+.sign strong{
+display:block;
+background:#08682e;
+color:white;
+padding:7px;
+font-size:14px;
+}
+
+.sign input{
+width:90%;
+margin-top:8px;
+border:0;
+border-bottom:1px solid #777;
+text-align:center;
+padding:5px;
+}
+
+.signature{
+margin:8mm 8mm 2mm;
+border-bottom:1px solid #777;
+}
+
+.sign small{
+font-size:11px;
+}
+
+.end{
+display:grid;
+gap:3mm;
+break-inside:avoid;
+}
+
+.footer{
+margin-top:auto;
+height:9mm;
+background:linear-gradient(
+176deg,#a4d63e 25%,#08682e 27%
+);
+}
+
+.printvalue{display:none}
+
+tr{break-inside:avoid}
+
+@page{
+size:A4 portrait;
+margin:5mm;
+}
+
+@media print{
+
+body{background:white}
+.toolbar{display:none!important}
+
+.paper{
+width:200mm;
+min-height:286mm;
+margin:0;
+padding:5mm;
+border-radius:0;
+print-color-adjust:exact;
+-webkit-print-color-adjust:exact;
+}
+
+input{display:none!important}
+
+.printvalue{
+display:inline-block;
+white-space:pre-wrap;
+overflow-wrap:anywhere;
+padding:4px;
+max-width:100%;
+}
+
+.field .printvalue{
+flex:1;
+align-self:center;
+text-align:center;
+}
+
+.sign .printvalue{
+display:block;
+}
+
+thead{display:table-header-group}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="toolbar">
+<button id="save">บันทึก / Save</button>
+<button id="print" disabled>พิมพ์ / PDF</button>
+<button id="close">ปิด / Close</button>
+<span id="status" role="status"></span>
+</div>
+
+<main class="paper">
+
+<div class="header">
+
+<div>
+
+<div class="brand">
+<img id="logo" alt="">
+<div>
+<strong>TITAN</strong>
+<small>PACKAGING</small>
+</div>
+</div>
+
+<div class="store">
+<b>ร้านค้า :</b> อุปกรณ์แพ็คกิ้งราคาโรงงาน<br>
+รับ-ส่ง พัสดุ by Titan Packaging<br>
+@ท่าตำหนัก<br>
+โทร 0612922895 (คุณแอร์)
+</div>
+
+</div>
+
+<div>
+
+<div class="title">
+ใบรับสินค้าหน้าร้าน / STORE PICKUP
+</div>
+
+<div class="meta">
+เลขที่เอกสาร / Doc No. :
+<b id="number"></b>
+</div>
+
+<div class="meta">
+วันที่ / Date : <b id="date"></b>
+</div>
+
+</div>
+</div>
+
+<div class="stripe"></div>
+
+<div class="two">
+
+<div class="field">
+<label>ชื่อลูกค้า<small>Customer</small></label>
+<input id="customer">
+</div>
+
+<div class="field">
+<label>ทะเบียนรถ<small>Vehicle Plate</small></label>
+<input id="plate">
+</div>
+
+</div>
+
+<div class="field">
+<label>เวลารับสินค้า<small>Pickup Time</small></label>
+<input id="time" type="time">
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th style="width:8%">ลำดับ<br>No.</th>
+<th>รายการสินค้า / Product</th>
+<th style="width:13%">จำนวน<br>Qty</th>
+<th style="width:14%">หน่วย<br>Unit</th>
+
+${noPrice?"":`
+<th style="width:15%">ราคาต่อหน่วย<br>Unit Price</th>
+<th style="width:15%">จำนวนเงิน<br>Amount</th>
+`}
+
+</tr>
+</thead>
+
+<tbody id="rows"></tbody>
+
+</table>
+
+<div class="end">
+
+${noPrice?"":'<div class="total" id="total"></div>'}
+
+<div class="summary">
+จำนวนรายการ / Items : ${items.length}
+│ หมายเหตุ / Note :
+<input id="note">
+</div>
+
+<div class="confirm">
+✓ ได้รับสินค้าครบถ้วนเรียบร้อยแล้ว
+</div>
+
+<div class="two">
+
+<div class="sign">
+<strong>ผู้ส่งสินค้า / Sender</strong>
+<input id="sender" placeholder="ชื่อ / Name">
+<div class="signature"></div>
+<small>ลายเซ็น / Signature</small>
+</div>
+
+<div class="sign">
+<strong>ผู้รับสินค้า / Receiver</strong>
+<input id="receiver" placeholder="ชื่อ / Name">
+<div class="signature"></div>
+<small>ลายเซ็น / Signature</small>
+</div>
+
+</div>
+</div>
+
+<div class="footer"></div>
+
+</main>
+</body>
+</html>`);
+
+d.close();
+
+const q = id => d.getElementById(id);
+
+q("logo").src = logo;
+q("date").textContent = dateText;
+q("number").textContent = existing?.number || "รอบันทึก";
+
+const fields = [
+"customer","plate","time","note","sender","receiver"
+];
+
+fields.forEach(id=>{
+q(id).value = existing?.[id] ?? (id==="time"?timeText:"");
+});
+
+const qtyInputs = [];
+const unitInputs = [];
+const amountCells = [];
+
+items.forEach((p,i)=>{
+
+const tr = d.createElement("tr");
+
+function cell(value){
+const td = d.createElement("td");
+td.textContent = value;
+tr.append(td);
+return td;
+}
+
+cell(i+1);
+cell(p.name);
+
+const qty = d.createElement("input");
+qty.type = "number";
+qty.min = "0.000001";
+qty.step = "any";
+qty.value = p.qty;
+
+cell("").append(qty);
+qtyInputs.push(qty);
+
+const unit = d.createElement("input");
+unit.value = p.unit || "ชิ้น";
+
+cell("").append(unit);
+unitInputs.push(unit);
+
+if(!noPrice){
+cell(formatPrice(p.price));
+amountCells.push(cell(""));
+}
+
+q("rows").append(tr);
+
+});
+
+for(let i=items.length;i<9;i++){
+
+const tr = d.createElement("tr");
+
+for(let j=0;j<(noPrice?4:6);j++){
+tr.append(d.createElement("td"));
+}
+
+q("rows").append(tr);
+
+}
+
+function refreshTotal(){
+
+if(noPrice)return;
+
+let total = 0;
+
+items.forEach((p,i)=>{
+
+const amount = Math.round(
+Number(qtyInputs[i].value)*p.price*100
+)/100;
+
+amountCells[i].textContent = formatPrice(amount);
+
+total += amount;
+
+});
+
+q("total").textContent =
+"ยอดรวมสุทธิ / Total : ฿"+formatPrice(total);
+
+}
+
+qtyInputs.forEach(input=>{
+input.oninput = refreshTotal;
+});
+
+refreshTotal();
+
+function freezeDocument(){
+
+d.querySelectorAll("input").forEach(input=>{
+
+input.readOnly = true;
+
+const span = d.createElement("span");
+span.className = "printvalue";
+span.textContent = input.value;
+
+input.after(span);
+
+});
+
+q("save").disabled = true;
+q("print").disabled = false;
+q("status").textContent = "บันทึกเรียบร้อยแล้ว / Saved";
+
+}
+
+let saving = false;
+
+q("print").onclick = () => win.print();
+
+q("close").onclick = () => {
+
+if(saving)return;
+
+if(q("save").disabled ||
+win.confirm("ปิดโดยไม่บันทึกหรือไม่?")){
+win.close();
+}
+
+};
+
+if(existing){
+freezeDocument();
+return;
+}
+
+q("status").textContent =
+"สามารถแก้จำนวนและหน่วยก่อนบันทึกได้";
+
+q("save").onclick = async () => {
+
+if(saving)return;
+
+if(!validAdmin(auth?.currentUser)||!db){
+win.alert("กรุณาเข้าสู่ระบบผู้ดูแลและเชื่อมต่อ Firebase");
+return;
+}
+
+const lines = items.map((p,i)=>({
+
+name:p.name,
+qty:Number(qtyInputs[i].value),
+unit:unitInputs[i].value.trim(),
+
+...(noPrice?{}:{price:p.price})
+
+}));
+
+if(lines.some(p=>
+!Number.isFinite(p.qty) ||
+p.qty<=0 ||
+!p.unit ||
+(!noPrice&&(!Number.isFinite(p.price)||p.price<0))
+)){
+win.alert("กรุณาตรวจสอบจำนวน หน่วย และราคา");
+return;
+}
+
+const information = {};
+
+fields.forEach(id=>{
+information[id] = q(id).value.trim();
+});
+
+const parts = new Intl.DateTimeFormat("en-GB",{
+timeZone:"Asia/Bangkok",
+calendar:"buddhist",
+year:"2-digit",
+month:"2-digit",
+day:"2-digit"
+}).formatToParts(date);
+
+const part = type =>
+parts.find(p=>p.type===type).value;
+
+const prefix =
+part("year")+part("month")+part("day");
+
+saving = true;
+
+q("save").disabled = true;
+
+d.querySelectorAll("input").forEach(input=>{
+input.readOnly = true;
+});
+
+q("status").textContent = "กำลังบันทึก...";
+
+try{
+
+const counter = doc(db,"pickupCounters",prefix);
+const record = doc(collection(db,"pickupNotes"));
+
+const number = await runTransaction(db,async tx=>{
+
+const snapshot = await tx.get(counter);
+
+const next = (snapshot.data()?.lastNumber??0)+1;
+
+const number =
+"PU-"+prefix+"-"+String(next).padStart(3,"0");
+
+tx.set(counter,{lastNumber:next});
+
+tx.set(record,{
+
+...information,
+number,
+date,
+noPrice,
+items:lines,
+
+...(noPrice?{}:{
+total:lines.reduce((sum,p)=>
+sum+Math.round(p.qty*p.price*100)/100,0)
+})
+
+});
+
+return number;
+
+});
+
+q("number").textContent = number;
+
+d.title = "ใบรับสินค้าหน้าร้าน_"+number;
+
+freezeDocument();
+
+}catch(error){
+
+q("status").textContent =
+"บันทึกไม่สำเร็จ : "+(error.code||error.message);
+
+q("save").disabled = false;
+
+d.querySelectorAll("input").forEach(input=>{
+input.readOnly = false;
+});
+
+}finally{
+
+saving = false;
+
+}
+
+};
+
+}
+
+// ===== ประวัติใบรับสินค้าหน้าร้าน =====
+
+function openPickupHistory(){
+
+if(!validAdmin(auth?.currentUser)||!db){
+alert("กรุณาเข้าสู่ระบบผู้ดูแล");
+return;
+}
+
+const history = document.createElement("dialog");
+
+history.style.cssText = pickupMenu.style.cssText;
+
+history.innerHTML = `
+
+<h2>ประวัติใบรับสินค้าหน้าร้าน
+<small>Pickup History</small></h2>
+
+<input type="search"
+placeholder="ค้นหาเลขที่ ลูกค้า หรือทะเบียนรถ"
+style="width:100%">
+
+<p role="status">กำลังโหลด...</p>
+
+<div class="pickup-list"></div>
+
+<button type="button" class="secondary">
+ปิด / Close
+</button>`;
+
+document.body.append(history);
+
+const search = history.querySelector("input");
+const status = history.querySelector("[role=status]");
+const list = history.querySelector(".pickup-list");
+
+let records = [];
+
+function render(){
+
+list.replaceChildren();
+
+const term = search.value.trim().toLowerCase();
+
+const matches = records.filter(p=>
+[p.number,p.customer,p.plate]
+.join(" ").toLowerCase().includes(term)
+);
+
+status.textContent = "พบ "+matches.length+" ใบ";
+
+matches.forEach(p=>{
+
+const row = document.createElement("div");
+
+row.style.cssText =
+"padding:12px 0;border-top:1px solid #c8dfce";
+
+const heading = document.createElement("strong");
+
+heading.textContent =
+p.number+" · "+(p.customer||"ไม่ระบุลูกค้า");
+
+const detail = document.createElement("p");
+
+detail.textContent =
+"ทะเบียนรถ : "+(p.plate||"-")+
+(p.noPrice?" · ไม่แสดงราคา":" · ฿"+formatPrice(p.total));
+
+const button = document.createElement("button");
+
+button.type = "button";
+button.textContent = "เปิด / พิมพ์ PDF";
+
+button.onclick = () => openPickup(p,p.noPrice);
+
+row.append(heading,detail,button);
+list.append(row);
+
+});
+
+}
+
+search.oninput = render;
+
+history.querySelector(".secondary").onclick =
+()=>history.close();
+
+history.showModal();
+
+const stop = onSnapshot(
+collection(db,"pickupNotes"),
+
+snapshot=>{
+
+records = snapshot.docs.map(x=>x.data());
+
+records.sort((a,b)=>
+String(b.number).localeCompare(
+String(a.number),"en",{numeric:true}
+));
+
+render();
+
+},
+
+error=>{
+
+status.textContent =
+"เปิดประวัติไม่สำเร็จ : "+error.code;
+
+});
+
+history.addEventListener("close",()=>{
+
+stop();
+history.remove();
+
+},{once:true});
+
+}
+
+})();
+
+// ===== จบระบบใบรับสินค้าหน้าร้าน =====
 const historyButton = document.createElement("button");
 historyButton.type = "button";
 historyButton.textContent = "ประวัติใบส่งสินค้า / Delivery History";
