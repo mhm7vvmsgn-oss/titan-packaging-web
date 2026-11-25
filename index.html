@@ -4128,7 +4128,9 @@ minimumFractionDigits:2,
 maximumFractionDigits:2
 });
 
-function openPickup(existing,noPrice){
+
+function openPickup(existing,noPrice,editMode=false){
+
 
 if(!validAdmin(auth?.currentUser)){
 alert("สำหรับผู้ดูแลเท่านั้น");
@@ -4798,10 +4800,12 @@ q("close").onclick = () => {
 };
 
 
-if(existing){
-freezeDocument();
-return;
+
+if(existing && !editMode){
+  freezeDocument();
+  return;
 }
+
 
 q("status").textContent =
 "สามารถแก้จำนวนและหน่วยก่อนบันทึกได้";
@@ -4965,6 +4969,46 @@ const list = history.querySelector(".pickup-list");
 
 let records = [];
 
+function editPickupRecord(p) {
+  if (!validAdmin(auth?.currentUser) || !db) {
+    alert("กรุณาเข้าสู่ระบบผู้ดูแล");
+    return;
+  }
+
+  if (!p._docId) {
+    alert("ไม่พบข้อมูลอ้างอิงเอกสาร");
+    return;
+  }
+
+  history.close();
+  openPickup(p, p.noPrice, true);
+}
+
+async function deletePickupRecord(p) {
+  if (!validAdmin(auth?.currentUser) || !db) {
+    alert("กรุณาเข้าสู่ระบบผู้ดูแล");
+    return;
+  }
+
+  if (!p._docId) {
+    alert("ไม่พบข้อมูลอ้างอิงเอกสาร");
+    return;
+  }
+
+  if (!confirm(
+    "ยืนยันลบเอกสาร " + p.number +
+    " หรือไม่? การลบไม่สามารถย้อนกลับได้"
+  )) return;
+
+  try {
+    await deleteDoc(doc(db, "pickupNotes", p._docId));
+    alert("ลบเอกสารเรียบร้อยแล้ว");
+  } catch (error) {
+    alert("ลบไม่สำเร็จ: " + error.message);
+  }
+}
+
+
 function render(){
 
 list.replaceChildren();
@@ -5003,7 +5047,23 @@ button.textContent = "เปิด / พิมพ์ PDF";
 
 button.onclick = () => openPickup(p,p.noPrice);
 
-row.append(heading,detail,button);
+
+const editButton = document.createElement("button");
+editButton.type = "button";
+editButton.textContent = "✏️ แก้ไข";
+editButton.style.cssText =
+  "background:#e3ece5;color:#166534;margin:6px";
+editButton.onclick = () => editPickupRecord(p);
+
+const deleteButton = document.createElement("button");
+deleteButton.type = "button";
+deleteButton.textContent = "🗑️ ลบ";
+deleteButton.style.cssText =
+  "background:#fee2e2;color:#b91c1c;margin:6px";
+deleteButton.onclick = () => deletePickupRecord(p);
+
+row.append(heading,detail,button,editButton,deleteButton);
+
 list.append(row);
 
 });
@@ -5022,7 +5082,12 @@ collection(db,"pickupNotes"),
 
 snapshot=>{
 
-records = snapshot.docs.map(x=>x.data());
+
+records = snapshot.docs.map(x=>({
+  ...x.data(),
+  _docId: x.id
+}));
+
 
 records.sort((a,b)=>
 String(b.number).localeCompare(
