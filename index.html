@@ -4060,6 +4060,47 @@ pickupButton.innerHTML = `
 
 $("createDeliveryNote").after(pickupButton);
 
+const receiptButton = document.createElement("button");
+receiptButton.type = "button";
+receiptButton.id = "storeReceiptButton";
+receiptButton.className = "admin-sale-button";
+
+receiptButton.style.cssText = `
+  order: 6;
+  grid-column: 1 / -1;
+  justify-self: center;
+  align-self: center;
+  width: 48%;
+  min-width: 0;
+  height: 58px;
+  padding: 6px 4px;
+  background: rgba(255, 192, 203, 0.55);
+  border: 1px solid rgba(230, 120, 160, 0.4);
+  color: #a3245e;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+`;
+
+receiptButton.innerHTML = `
+  <span style="font-size:12px;font-weight:600">
+    🧾 ใบเสร็จรับเงินหน้าร้าน
+  </span>
+  <small style="font-size:10px">
+    Store Receipt
+  </small>
+`;
+
+pickupButton.after(receiptButton);
+
+receiptButton.onclick = () => {
+  alert("ขั้นต่อไปจะเชื่อมกับรายการขายหน้าร้านที่บันทึกแล้ว");
+};
+
+
 const pickupMenu = document.createElement("dialog");
 
 pickupMenu.style.cssText =
