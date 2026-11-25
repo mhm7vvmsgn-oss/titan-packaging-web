@@ -2396,7 +2396,112 @@ updateDeliveryNoteLock();
 
 //// TITAN PACKAGING - ใบส่งสินค้าแบบใหม่
 
-$("createDeliveryNote").onclick = () => openDeliveryNote();
+
+$("createDeliveryNote").onclick = () => openDocumentMenu();
+
+function openDocumentMenu() {
+  if (!validAdmin(auth?.currentUser)) {
+    alert("สำหรับผู้ดูแลเท่านั้น");
+    return;
+  }
+
+  let menu = document.getElementById("documentTypeMenu");
+
+  if (!menu) {
+    menu = document.createElement("dialog");
+    menu.id = "documentTypeMenu";
+    menu.style.cssText =
+      "width:min(92vw,440px);border:0;border-radius:16px;" +
+      "padding:20px;box-sizing:border-box";
+
+    menu.innerHTML = `
+      <h2>📄 จัดการเอกสาร
+        <small>Document Management</small>
+      </h2>
+
+      <div style="display:grid;gap:10px">
+        <button type="button" id="menuOriginalDelivery">
+          📄 สร้างใบส่งสินค้าแบบเดิม
+          <small>Original Delivery Note</small>
+        </button>
+
+        <button type="button" id="menuNoPrice">
+          📋 ใบสรุปสินค้าไม่มีราคา
+          <small>Summary Without Prices</small>
+        </button>
+
+        <button type="button" class="secondary" id="menuClose">
+          ปิด / Close
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(menu);
+
+    document.getElementById("menuOriginalDelivery").onclick = () => {
+      menu.close();
+      openDeliveryNote();
+    };
+
+    document.getElementById("menuNoPrice").onclick = () => {
+      menu.close();
+      previewNoPriceSummary();
+    };
+
+    document.getElementById("menuClose").onclick = () => {
+      menu.close();
+    };
+  }
+
+  menu.showModal();
+}
+
+function previewNoPriceSummary() {
+  const items = entries();
+
+  if (!items.length) {
+    alert("กรุณาเพิ่มสินค้าลงตะกร้าก่อน");
+    return;
+  }
+
+  const dialog = document.createElement("dialog");
+  dialog.style.cssText =
+    "width:min(92vw,480px);max-height:85vh;" +
+    "overflow:auto;border:0;border-radius:16px;" +
+    "padding:20px;box-sizing:border-box";
+
+  const heading = document.createElement("h2");
+  heading.textContent = "📋 ใบสรุปรายการสินค้า";
+
+  const description = document.createElement("p");
+  description.textContent =
+    "รายการนี้แสดงเฉพาะชื่อสินค้าและจำนวน ไม่มีราคา";
+
+  const list = document.createElement("div");
+
+  items.forEach(e => {
+    const row = document.createElement("p");
+    const color = e.color ? " (สี" + e.color + ")" : "";
+
+    row.textContent =
+      e.p.name + color + " × " + e.qty;
+
+    list.appendChild(row);
+  });
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "secondary";
+  close.textContent = "ปิด / Close";
+  close.onclick = () => dialog.close();
+
+  dialog.addEventListener("close", () => dialog.remove());
+
+  dialog.append(heading, description, list, close);
+  document.body.appendChild(dialog);
+  dialog.showModal();
+}
+
 
 function openDeliveryNote(existing = null) {
   if (!validAdmin(auth?.currentUser)) {
