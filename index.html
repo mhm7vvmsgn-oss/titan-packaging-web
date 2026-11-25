@@ -53,6 +53,49 @@ nav button.active{background:white;color:#166534}
 body:not(:has(#loginPanel.hidden)) #createDeliveryNote,
 body:not(:has(#loginPanel.hidden)) .admin-sale-button {
   display: none !important;
+  
+.cart-action-grid > button {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.cart-action-grid #download {
+  order: 1;
+  height: 112px;
+}
+
+.cart-action-grid #copy {
+  order: 2;
+  height: 112px;
+}
+
+.cart-action-grid #clear {
+  order: 3;
+  grid-column: 1 / -1;
+  justify-self: center;
+  align-self: center;
+  width: 48%;
+  height: 58px;
+  flex: none;
+}
+
+.cart-action-grid .admin-sale-button {
+  order: 4;
+  height: 88px;
+}
+
+.cart-action-grid #createDeliveryNote {
+  order: 5;
+  height: 88px;
+}
+
 }</style>
   <style>
   button[data-camera],
@@ -189,7 +232,7 @@ body > header .hero-brand h1 {
 <span>ยอดรวม<small>Total</small></span>
 <b id="total">฿0.00</b>
 </div>
-<div class="actions" style="margin-top:15px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:8px;">
+<div  class="actions cart-action-grid"style="margin-top:15px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:8px;">
   <button id="download" type="button"
     style="min-width:0;padding:7px 6px;border-left:4px solid #ff861c;border-radius:11px;background:linear-gradient(120deg,#10613e,#063d28);color:white;text-align:center;line-height:1.2;">
     <strong style="display:block;font-size:15px;">
