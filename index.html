@@ -4097,7 +4097,139 @@ receiptButton.innerHTML = `
 pickupButton.after(receiptButton);
 
 receiptButton.onclick = () => {
-  alert("ขั้นต่อไปจะเชื่อมกับรายการขายหน้าร้านที่บันทึกแล้ว");
+  if (!validAdmin(auth?.currentUser)) {
+    return alert("กรุณาเข้าสู่ระบบผู้ดูแลก่อน");
+  }
+
+  const menu = document.createElement("dialog");
+  menu.style.cssText = "width:min(92vw,440px);max-height:85vh;overflow:auto;border:0;border-radius:18px;padding:18px;box-sizing:border-box";
+
+  menu.innerHTML = `
+    <h2 style="text-align:center;color:#a3245e">
+      🧾 ใบเสร็จรับเงินหน้าร้าน
+      <small>Store Receipt</small>
+    </h2>
+    <p style="text-align:center">เลือกบิลจากประวัติขายล่าสุด</p>
+    <div data-receipts>กำลังโหลดข้อมูล...</div>
+    <button type="button" data-close
+      style="width:100%;margin-top:12px">
+      ปิด / Close
+    </button>
+  `;
+
+  document.body.append(menu);
+  menu.showModal();
+
+  const list = menu.querySelector("[data-receipts]");
+
+  const stop = onSnapshot(
+    collection(db, "jpgSaleRequests"),
+    snapshot => {
+      list.replaceChildren();
+
+      if (!validAdmin(auth?.currentUser)) {
+        menu.close();
+        return;
+      }
+
+      const bills = snapshot.docs
+        .sort((a,b) =>
+          (b.data().submittedAt?.toMillis?.() || 0) -
+          (a.data().submittedAt?.toMillis?.() || 0)
+        )
+        .filter(d => validJpgBill(d.data()));
+
+      if (!bills.length) {
+        list.textContent = "ไม่มีรายการขายล่าสุด";
+        return;
+      }
+
+      for (const d of bills) {
+        const bill = d.data();
+        const card = document.createElement("div");
+        card.style.cssText = "padding:12px;margin:10px 0;border:1px solid #f0b6cc;border-radius:12px;background:#fff5f8";
+
+        const date = document.createElement("strong");
+        date.textContent = bill.submittedAt.toDate()
+          .toLocaleString("th-TH");
+
+        const total = document.createElement("p");
+        total.textContent = "ยอดรวม " + saleMoney(bill.total);
+
+        const payment = document.createElement("p");
+        payment.textContent = "ชำระเงิน: " + bill.payment;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "เลือกบิล / Select";
+        button.style.cssText = "width:100%;background:#db2777;color:white";
+
+        button.onclick = () => {
+          if (!validAdmin(auth?.currentUser)) return;
+          const win = window.open("", "_blank");
+          if (!win) return alert("กรุณาอนุญาตหน้าต่างใหม่");
+
+          win.document.write(`<!DOCTYPE html>
+          <html lang="th">
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>ใบเสร็จรับเงิน</title>
+          <style>
+          body{font-family:sans-serif;padding:20px;max-width:600px;margin:auto}
+          h2,h3{text-align:center}
+          p{margin:8px 0}
+          .line{padding:10px 0;border-bottom:1px dashed #ccc}
+          button{width:100%;padding:14px;margin-top:20px}
+          @media print{button{display:none}}
+          </style>
+          </head>
+          <body>
+          <h2>TITAN PACKAGING</h2>
+          <h3>ใบเสร็จรับเงินหน้าร้าน</h3>
+          <div id="info"></div>
+          <button onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+          </body></html>`);
+
+          win.document.close();
+
+          const info = win.document.getElementById("info");
+
+          const add = (value) => {
+            const p = win.document.createElement("p");
+            p.className = "line";
+            p.textContent = value;
+            info.append(p);
+          };
+
+          add("วันที่: " + date.textContent);
+
+          for (const item of bill.items) {
+            add([item.name,item.color].filter(Boolean).join(" ")
+              + " × " + item.qty
+              + " @ " + saleMoney(Math.round(item.unitPrice * 100))
+              + " = " + saleMoney(item.amount));
+          }
+
+          add("ยอดรวมสุทธิ: " + saleMoney(bill.total));
+          add("ชำระเงิน: " + bill.payment);
+        };
+
+        card.append(date,total,payment,button);
+        list.append(card);
+      }
+    },
+    error => {
+      list.textContent = "โหลดข้อมูลไม่ได้: " + error.message;
+    }
+  );
+
+  menu.querySelector("[data-close]").onclick = () => menu.close();
+
+  menu.addEventListener("close", () => {
+    stop();
+    menu.remove();
+  }, {once:true});
 };
 
 
