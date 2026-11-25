@@ -3837,6 +3837,12 @@ ${noPrice ? "" : `
 
         tx.set(counter, { lastNumber: next });
         tx.set(delivery, {
+          
+tx.set(delivery, {
+  noPrice: noPrice,
+  number,
+  date: deliveryDate,
+
           number,
           date: deliveryDate,
                     payment: note.querySelector('input[name="delivery-pay"]:checked')?.value || "",
