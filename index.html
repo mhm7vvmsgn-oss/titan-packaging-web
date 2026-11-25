@@ -86,10 +86,19 @@ body:not(:has(#loginPanel.hidden)) .admin-sale-button {
   flex: none;
 }
 
+
 .cart-action-grid .admin-sale-button {
+  order: 6;
+  grid-column: 1 / -1;
+  height: auto;
+}
+
+.cart-action-grid #createDeliveryNote + .admin-sale-button {
   order: 4;
+  grid-column: auto;
   height: 88px;
 }
+
 
 .cart-action-grid #createDeliveryNote {
   order: 5;
