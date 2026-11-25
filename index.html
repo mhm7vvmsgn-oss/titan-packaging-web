@@ -2445,7 +2445,7 @@ function openDocumentMenu() {
 
     document.getElementById("menuNoPrice").onclick = () => {
       menu.close();
-      previewNoPriceSummary();
+      openDeliveryNote(null, true);
     };
 
     document.getElementById("menuClose").onclick = () => {
@@ -2503,7 +2503,13 @@ function previewNoPriceSummary() {
 }
 
 
-function openDeliveryNote(existing = null) {
+
+function openDeliveryNote(existing = null, noPrice = false) {
+  noPrice = existing ? existing.noPrice === true : noPrice;
+
+function openDeliveryNote(existing = null, noPrice = false) {
+  noPrice = existing ? existing.noPrice === true : noPrice;
+
   if (!validAdmin(auth?.currentUser)) {
     alert("สำหรับผู้ดูแลเท่านั้น กรุณาเข้าสู่ระบบก่อน");
     return;
@@ -2551,15 +2557,22 @@ function openDeliveryNote(existing = null) {
     'input[name="titan-checkout-method"]:checked'
   )?.value || "cash";
 
-  const rows = lines.map((p, i) => `
-    <tr>
-      <td class="center">${i + 1}</td>
-      <td class="product">${escapeHTML(p.name)}</td>
-      <td class="right">${baht(p.price)}</td>
-      <td class="center">${p.qty.toLocaleString("th-TH")}</td>
-      <td class="right">${baht(p.qty * p.price)}</td>
-    </tr>
-  `).join("");
+  
+const rows = lines.map((p, i) => `
+  <tr>
+    <td class="center">${i + 1}</td>
+    <td class="product">${escapeHTML(p.name)}</td>
+    ${noPrice ? "" : `<td class="right">${baht(p.price)}</td>`}
+    <td class="center">${p.qty.toLocaleString("th-TH")}</td>
+    ${noPrice ? "" : `<td class="right">${baht(p.qty * p.price)}</td>`}
+  </tr>
+`).join("");
+
+const blankRows = Array.from(
+  { length: Math.max(0, 10 - lines.length) },
+  () => `<tr class="blank">${"<td></td>".repeat(noPrice ? 3 : 5)}</tr>`
+).join("");
+
 
   const blankRows = Array.from(
     { length: Math.max(0, 10 - lines.length) },
@@ -3035,16 +3048,24 @@ tbody tr.blank{
         <col style="width:20%">
         <col style="width:14%">
         <col style="width:20%">
-      </colgroup>
-      <thead>
-        <tr>
-          <th>ลำดับ<small>No.</small></th>
-          <th>รายการสินค้า<small>Product</small></th>
-          <th>ราคาต่อหน่วย<small>Unit Price</small></th>
-          <th>จำนวน<small>Qty</small></th>
-          <th>ยอดเงิน<small>Amount</small></th>
-        </tr>
-      </thead>
+      
+<colgroup>
+  <col style="width:11%">
+  <col style="width:${noPrice ? 75 : 35}%">
+  ${noPrice ? "" : '<col style="width:20%">'}
+  <col style="width:14%">
+  ${noPrice ? "" : '<col style="width:20%">'}
+</colgroup>
+<thead>
+  <tr>
+    <th>ลำดับ<small>No.</small></th>
+    <th>รายการสินค้า<small>Product</small></th>
+    ${noPrice ? "" : '<th>ราคาต่อหน่วย<small>Unit Price</small></th>'}
+    <th>จำนวน<small>Qty</small></th>
+    ${noPrice ? "" : '<th>ยอดเงิน<small>Amount</small></th>'}
+  </tr>
+</thead>
+
       <tbody>${rows}${blankRows}</tbody>
     </table>
     <div class="grand">
